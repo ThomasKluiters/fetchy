@@ -35,7 +35,7 @@ def dependency_from_string(kind, string):
         condition_idx_end = string.find("]")
         condition_string = string[condition_idx_start + 1 : condition_idx_end]
         condition = condition_string
-    
+
     if (condition_idx_start != -1) and (version_idx_start != -1):
         name_idx_end = min(version_idx_start, condition_idx_start)
     elif condition_idx_start != -1:
