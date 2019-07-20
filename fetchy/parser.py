@@ -9,22 +9,30 @@ class Parser(object):
         one would require to find the desired packages.
         """
         if fields is None:
-            fields = ["Package", "Version", "Depends", "Pre-Depends", "Filename"]
+            fields = [
+                "Package",
+                "Version",
+                "Depends",
+                "Pre-Depends",
+                "Filename",
+                "Architecture",
+            ]
         self.packages_file = packages_file
         self.fields = fields
 
     def parse_packages_raw(self, fp):
         pkg = {}
         for line in fp:
-            for field in self.fields:
-                if line.startswith(field):
-                    pkg[field] = line.rstrip()[(len(field) + 2) :]
-
             # New packages are introduced with whitespaces
             if line.startswith("\r\n") or line.startswith("\n"):
                 if pkg:
                     yield pkg
                     pkg = {}
+
+            for field in self.fields:
+                if line.startswith(field):
+                    pkg[field] = line.rstrip()[(len(field) + 2) :]
+                    break
 
     def parse(self):
         pkgs = {}
