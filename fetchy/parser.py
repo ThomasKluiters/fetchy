@@ -22,6 +22,7 @@ class Parser(object):
             ]
         self.packages_file = packages_file
         self.fields = fields
+        self.pkgs = {}
 
     def _parse_packages_raw(self, fp):
         """Function that yields packages as dictionaries
@@ -61,8 +62,11 @@ class Parser(object):
         be populated with the fields that are
         supplied to this Parsers' Constructor.
         """
-        pkgs = {}
+        if self.pkgs:
+            return self.pkgs
+
+        self.pkgs = {}
         with open(self.packages_file, "r") as fp:
             for pkg in self._parse_packages_raw(fp):
-                pkgs[pkg["Package"]] = package_from_dict(pkg)
-        return pkgs
+                self.pkgs[pkg["Package"]] = package_from_dict(pkg)
+        return self.pkgs
