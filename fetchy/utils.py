@@ -3,7 +3,11 @@ import gzip
 import urllib
 import shutil
 import platform
+import logging
 
+from tqdm import tqdm
+
+logger = logging.getLogger(__name__)
 
 def get_distribution():
     """Function to acquire current Distribution
@@ -108,14 +112,27 @@ def get_packages_control_file(
         fetchy_dir, distribution, distribution_version, architecture
     )
 
+    logger.info(f"Using Package file {packages_file}")
+    logger.info(f"Distribution: {distribution}, {distribution_version}")
+    logger.info(f"Architecture: {architecture}")
+    logger.info(f"Mirror: {mirror}")
+
     if not os.path.isdir(fetchy_dir):
+        logger.warning(f"Fetchy directory does not exist, creating {fetchy_dir}")
         os.mkdir(fetchy_dir)
 
     if not os.path.isfile(packages_file):
         packages_url = f"{mirror}dists/{distribution_version}/main/binary-{architecture}/Packages.gz"
         packages_file_tar = packages_file + ".gz"
 
-        urllib.request.urlretrieve(packages_url, packages_file_tar)
+        logger.warning(f"Packages file does not exist, fetching {packages_url}")
+
+        with tqdm(unit='B', unit_scale=True, unit_divisor=1024, miniters=1, desc="Downloading") as t:
+            def hook(b=1, bsize=1, tsize=None):
+                if tsize is not None:
+                    t.total = tsize
+                t.update(b * bsize - t.n)
+            urllib.request.urlretrieve(packages_url, packages_file_tar, hook)
 
         with gzip.open(packages_file_tar, "rb") as data_in:
             with open(packages_file, "wb") as data_out:

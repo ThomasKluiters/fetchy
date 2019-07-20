@@ -6,6 +6,7 @@ authors = ["thomas <thomas.kluiters@gmail.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.6"
+tqdm = "^4.32"
 
 [tool.poetry.dev-dependencies]
 pytest = "^3.0"
