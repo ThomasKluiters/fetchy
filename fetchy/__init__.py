@@ -10,3 +10,4 @@ from .dependency import (
 from .package import Package, package_from_dict
 from .parser import Parser
 from .downloader import Downloader
+from .utils import download_packages_control_file
