@@ -11,11 +11,8 @@ regardless of the architecture `apt-get` is running on.
 ## What can Fetchy be used for?
 
 Fetchy can be used for the construction of Docker images. For example,
-creating a docker image with *just* python3.6 can be a bit challenging.
-
-We'd first have to start a seperate container with vanilla ubuntu and use
-`apt-get` with the `download-only` flag. Furthermore, the packages downloaded
-will be specific to the architecture the docker container is running as.
+creating a docker image with *just* python3.6 which can be quite challenging
+using existing tools.
 
 ## Installing
 
