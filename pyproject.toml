@@ -1,8 +1,10 @@
 [tool.poetry]
 name = "fetchy"
 version = "0.1.0"
-description = ""
+description = "Downloading packages made easy!"
 authors = ["thomas <thomas.kluiters@gmail.com>"]
+homepage = "https://github.com/ThomasKluiters/fetchy"
+repository = "https://github.com/ThomasKluiters/fetchy"
 
 [tool.poetry.dependencies]
 python = "^3.6"
