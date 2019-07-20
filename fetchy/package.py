@@ -50,8 +50,10 @@ class Package(object):
         self.arch = arch
         self.dependencies = dependencies
         self.pre_dependencies = pre_dependencies
-        self.filename = filename
+        self._file_name = filename
 
     def file_name(self):
-        if self.file_name is None:
-            return f"{self.name}-{self.version}"
+        if self._file_name is None:
+            self._file_name = f"{self.name}-{self.version}"
+        return self._file_name
+        
