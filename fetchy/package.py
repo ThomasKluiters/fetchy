@@ -56,4 +56,3 @@ class Package(object):
         if self._file_name is None:
             self._file_name = f"{self.name}-{self.version}"
         return self._file_name
-        

@@ -53,3 +53,4 @@ class Parser(object):
                     if line.startswith(field):
                         pkg[field] = line.rstrip()[(len(field) + 2) :]
                         break
+        return self.pkgs
