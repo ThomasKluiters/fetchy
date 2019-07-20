@@ -10,4 +10,5 @@ from .dependency import (
 from .package import Package, package_from_dict
 from .parser import Parser
 from .downloader import Downloader
-import utils
+from .utils import *
+from .cli import main as cli

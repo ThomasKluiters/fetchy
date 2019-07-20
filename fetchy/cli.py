@@ -2,7 +2,8 @@ import argparse
 
 import fetchy as fty
 
-if __name__ == "__main__":
+
+def main():
     parser = argparse.ArgumentParser(description="Fetchy: Download Linux packages.")
     parser.add_argument(
         "package", metavar="PACKAGE", help="the package fetchy should download"
@@ -32,7 +33,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--fetchy-dir",
         help="the home directory for fetchy",
-        default=fty.utils.get_fetchy_dir(),
+        default=fty.get_fetchy_dir(),
     )
     args = parser.parse_args()
 
@@ -57,13 +58,17 @@ if __name__ == "__main__":
     )
 
     if mirror is None:
-        mirror = fty.utils.get_mirror(distribution)
+        mirror = fty.get_mirror(distribution)
 
     if packages_file is None:
-        packages_file = fty.utils.get_packages_control_file(
+        packages_file = fty.get_packages_control_file(
             distribution, version, architecture, mirror, fetchy_dir
         )
 
     packages = fty.Parser(packages_file).parse()
     downloader = fty.Downloader(packages, mirror=mirror, out_dir=out_dir)
     downloader.download_package(package)
+
+
+if __name__ == "__main__":
+    main()
