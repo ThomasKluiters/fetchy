@@ -52,3 +52,6 @@ class Version(object):
         self.upstream_version = upstream_version
         self.debian_revision = debian_revision
         self.epoch = epoch
+
+    def __str__(self):
+        return f"{self.epoch}:{self.upstream_version}-{self.debian_revision}"
