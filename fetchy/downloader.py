@@ -1,4 +1,10 @@
+import os
+import logging
 import urllib.request
+
+from tqdm import tqdm
+
+logger = logging.getLogger(__name__)
 
 
 class Downloader(object):
@@ -22,16 +28,41 @@ class Downloader(object):
         Furthermore, all dependencies for the
         package are also downloaded.
         """
+        if not os.path.isdir(self.out_dir):
+            logger.info(f"Creating output directory {self.out_dir}")
+            os.mkdir(self.out_dir)
 
+        logger.info(f"Gathering dependencies for {package_name}")
         for (name, package) in self.gather_dependencies(package_name).items():
-            print(f"Downloading {name}")
+            package_url = f"{self.mirror}/{package.file_name()}"
+            package_file = f"{self.out_dir}/{name}-{package.version}.deb"
 
-            url = f"{self.mirror}/{package.file_name()}"
-            file_name = f"{self.out_dir}/{name}-{package.version}.deb"
+            logger.info(f"Downloading package {name} at {package_url}")
 
-            urllib.request.urlretrieve(url, file_name)
+            with tqdm(
+                unit="B",
+                unit_scale=True,
+                unit_divisor=1024,
+                miniters=1,
+                desc=f"Downloading {name}",
+            ) as t:
+
+                def hook(b=1, bsize=1, tsize=None):
+                    if tsize is not None:
+                        t.total = tsize
+                    t.update(b * bsize - t.n)
+
+                urllib.request.urlretrieve(package_url, package_file, hook)
 
     def gather_dependencies(self, package_name):
+        """Function for gathering dependencies
+
+        This function will naaively gather
+        dependencies for the given package.
+
+        This will only gather Depends and
+        Pre-Depends dependencies.
+        """
         queue = [package_name]
 
         dependencies = {}

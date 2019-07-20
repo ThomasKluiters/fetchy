@@ -9,6 +9,7 @@ from tqdm import tqdm
 
 logger = logging.getLogger(__name__)
 
+
 def get_distribution():
     """Function to acquire current Distribution
 
@@ -38,11 +39,13 @@ def get_architecture():
     return {"64bit": "amd64"}[arch]
 
 
-def get_mirror(distribution):
+def get_mirror(distribution=None):
     """Function to acquire mirror site
 
     For now it does not find the optimal mirror.
     """
+    if distribution is None:
+        distribution = get_distribution()
     extension = {"ubuntu": "com", "debian": "org"}[distribution]
     return f"http://ftp.{distribution}.{extension}/{distribution}/"
 
@@ -127,11 +130,15 @@ def get_packages_control_file(
 
         logger.warning(f"Packages file does not exist, fetching {packages_url}")
 
-        with tqdm(unit='B', unit_scale=True, unit_divisor=1024, miniters=1, desc="Downloading") as t:
+        with tqdm(
+            unit="B", unit_scale=True, unit_divisor=1024, miniters=1, desc="Downloading"
+        ) as t:
+
             def hook(b=1, bsize=1, tsize=None):
                 if tsize is not None:
                     t.total = tsize
                 t.update(b * bsize - t.n)
+
             urllib.request.urlretrieve(packages_url, packages_file_tar, hook)
 
         with gzip.open(packages_file_tar, "rb") as data_in:
