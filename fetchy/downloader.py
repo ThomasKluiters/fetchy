@@ -10,8 +10,6 @@ logger = logging.getLogger(__name__)
 class Downloader(object):
     def __init__(self, packages, mirror=None, out_dir="./out"):
         """
-        A Downloader Object
-
         The Downloader class is responsible for downloading packages and it's dependencies.
 
         Parameters

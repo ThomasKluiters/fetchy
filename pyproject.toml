@@ -9,6 +9,7 @@ repository = "https://github.com/ThomasKluiters/fetchy"
 [tool.poetry.dependencies]
 python = "^3.6"
 tqdm = "^4.32"
+distro = "^1.4"
 
 [tool.poetry.dev-dependencies]
 pytest = "^3.0"

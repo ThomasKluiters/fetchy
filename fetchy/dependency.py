@@ -115,28 +115,31 @@ class Dependency(object):
 
 class SimpleDependency(Dependency):
     def __init__(self, kind, name, relationship, condition):
-        """A Simple Dependency Object
+        """
+        A Simple Depency Object is a combination of a name and optionally
+        a version specifier.
 
-        A Simple Depency Object is a combination
-        of a name, optionally relationship and optionally
-        a condition.
+        Only the name of a Dependency is neccesary. If no version specifier
+        is given then the latest package is used as a dependency.
 
-        The name identifies the package that is to
-        be looked up.
+        A version specifier may be supplied to give a constraint on which
+        package may be a suitable dependency.
 
-        The relationship optionally specifies the version 
-        that is required to be installed.
+        Lastly, a dependency may have an optional condition under which
+        it should be (or should not) be installed.
 
-        Possible versions are:
-        - `<<`, strictly earlier
-        - `<=`, earlier or equal
-        - `=`,  equal
-        - `>=`, later or equal
-        - `>>`, strictly later
+        Parameters
+        ----------
+        kind : string representing if this dependency is either a
+            `Pre-Dependency` or `Dependency`.
+        
+        name : string representing the name of this dependency.
 
-        A condition can be optionally supplied. A 
-        condition can be used to specify which dependency
-        should be installed with respect to the architecture.
+        rerlationship : the version specifier for this dependency must be
+            an instance of :DependencyRelationship:.
+
+        condition : a boolean condition under which this dependency
+            must or must not be used.
         """
         super().__init__(kind)
         self.name = name

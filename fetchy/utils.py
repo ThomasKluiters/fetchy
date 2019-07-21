@@ -1,6 +1,7 @@
 import os
 import gzip
 import urllib
+import distro
 import shutil
 import platform
 import logging
@@ -16,8 +17,7 @@ def get_distribution():
     This function will return the current distribution
     if the user is running on a Linux machine.
     """
-    (distribution, _, _) = platform.linux_distribution()
-    return distribution.lower()
+    return distro.id()
 
 
 def get_distribution_version():
@@ -26,8 +26,7 @@ def get_distribution_version():
     This function will return the current distribution version
     if the user is running on a Linux machine.
     """
-    (_, _, distribution_version) = platform.linux_distribution()
-    return distribution_version.lower()
+    return distro.codename()
 
 
 def get_architecture():
