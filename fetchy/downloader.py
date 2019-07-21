@@ -50,7 +50,7 @@ class Downloader(object):
         logger.info(f"Gathering dependencies for {package_name}")
         for (name, package) in self.gather_dependencies(package_name).items():
             package_url = f"{self.mirror}/{package.file_name()}"
-            package_file = f"{self.out_dir}/{name}-{package.version}.deb"
+            package_file = f"{self.out_dir}/{os.path.basename(package.file_name())}"
 
             logger.info(f"Downloading package {name} at {package_url}")
 

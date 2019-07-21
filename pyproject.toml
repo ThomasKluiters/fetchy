@@ -18,6 +18,3 @@ flake8 = "3.7.8"
 
 [tool.poetry.scripts]
 fetchy = 'fetchy:cli'
-requires = ["poetry>=0.12"]
-build-backend = "poetry.masonry.api"
-
