@@ -9,24 +9,39 @@ logger = logging.getLogger(__name__)
 
 class Downloader(object):
     def __init__(self, packages, mirror=None, out_dir="./out"):
-        """A Downloader Object
+        """
+        The Downloader class is responsible for downloading packages and it's dependencies.
 
-        The Downloader class is responsible for
-        downloading packages and it's dependencies.
+        Parameters
+        ----------
+        packages : a dictionary containing a collection of packages this
+            Downloader may use to satisfy dependencies.
+        
+        mirror : the url of the mirror that will be used when downloading
+            packages.
+
+        out_dir : the output directory this Downloader will download packages
+            into.
         """
         self.packages = packages
         self.mirror = mirror
         self.out_dir = out_dir
 
-    def download_package(self, package_name, version=None, architecture=None):
-        """Function for downloading a package
+    def download_package(self, package_name, version=None):
+        """
+        Downloads a package and its' dependencies into a folder.
 
-        This function downloads the specified
-        package name with the supplied version
-        and architecture when given.
+        Before downloading any package, the dependencies of the given
+        package are first gathered into a list of dependencies.
 
-        Furthermore, all dependencies for the
-        package are also downloaded.
+        Then, once all dependencies are determined, each dependency
+        is downloaded into the folder this Downloader has been configured
+        to use as an output directory.
+
+        Parameters
+        ----------
+        package_name : string representing the name of the package
+            that should be downloaded.
         """
         if not os.path.isdir(self.out_dir):
             logger.info(f"Creating output directory {self.out_dir}")
@@ -55,13 +70,25 @@ class Downloader(object):
                 urllib.request.urlretrieve(package_url, package_file, hook)
 
     def gather_dependencies(self, package_name):
-        """Function for gathering dependencies
+        """
+        Gather dependencies for a package.
 
-        This function will naaively gather
-        dependencies for the given package.
+        This function will naaively gather dependencies for the given package name.
 
-        This will only gather Depends and
-        Pre-Depends dependencies.
+        This will only gather Depends and Pre-Depends dependencies and thus only gather
+        the dependencies that are required in order to make the given package run.
+
+        Parameters
+        ----------
+        package_name : string representing the name of the package
+            dependencies should be gathereed for.
+        
+        Returns
+        -------
+        dict
+            A dictionary containing all the dependencies required for
+            the given package. Each dependency is stored as a Package
+            object and uses the package name as key.
         """
         queue = [package_name]
 
