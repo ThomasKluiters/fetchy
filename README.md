@@ -54,6 +54,32 @@ fetchy --distribution debian --version stretch openssl
 
 ### Advanced features
 
+#### Excluding dependencies
+
+If some packages are unwanted, you can simply exclude them:
+
+Using a name:
+```bash
+fetchy --exclude dpkg --exclude perl-base python3
+```
+
+It is also possible to create an exclusion file, where each line
+denotes a dependency that should not be included:
+
+
+exclusions.txt
+```
+perl-base
+dpkg
+```
+
+Using a name:
+```bash
+fetchy --exclude exclusions.txt python3
+```
+
+Note: exclusion files MUST end with a .txt extension!
+
 #### Using PPA's
 
 If some packages are not available for your main mirror, try using a ppa:
@@ -66,4 +92,9 @@ fetchy --ppa deadsnakes python3.8
 Using a URL:
 ```bash
 fetchy --ppa https://deb.nodesource.com/node_10.x nodejs
+```
+
+Or both!
+```bash
+fetchy --ppa https://deb.nodesource.com/node_10.x --ppa deadsnakes python3.8 nodejs
 ```

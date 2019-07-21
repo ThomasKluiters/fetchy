@@ -3,20 +3,67 @@ import argparse
 import fetchy as fty
 
 
+def download(
+    packages_to_download,
+    mirror,
+    out_dir,
+    distribution,
+    version,
+    packages_file,
+    architecture,
+    fetchy_dir,
+    ppas,
+    exclusions,
+):
+    if mirror is None:
+        mirror = fty.get_mirror(distribution)
+
+    if packages_file is None:
+        packages = fty.get_packages_control_file(
+            distribution, version, architecture, mirror, fetchy_dir
+        )
+    else:
+        packages = fty.Repository(packages_file, mirror)
+
+    fty.Parser(packages).parse()
+
+    for ppa in ppas:
+        ppa_packages = fty.get_packages_control_file(
+            distribution, version, architecture, fetchy_dir=fetchy_dir, ppa=ppa
+        )
+
+        fty.Parser(ppa_packages).parse()
+        packages.merge(ppa_packages)
+
+    dependencies_to_exclude = fty.gather_exclusions(exclusions)
+
+    downloader = fty.Downloader(packages, out_dir=out_dir)
+    downloader.download_package(packages_to_download, dependencies_to_exclude)
+
+
 def main():
     parser = argparse.ArgumentParser(description="Fetchy: Download Linux packages.")
     parser.add_argument(
         "packages",
         metavar="PACKAGES",
         help="the package fetchy should download",
-        nargs="+"
+        nargs="+",
     )
     parser.add_argument(
         "--mirror",
         help="the default mirror to use, defaults to the best mirror fetchy can find",
     )
     parser.add_argument(
-        "--ppa", help="a ppa to add to the repository of packages", action="append"
+        "--exclude",
+        help="dependency to exclude can either be a name or a file to read from",
+        action="append",
+        default=[],
+    )
+    parser.add_argument(
+        "--ppa",
+        help="a ppa to add to the repository of packages",
+        action="append",
+        default=[],
     )
     parser.add_argument(
         "--out",
@@ -43,17 +90,7 @@ def main():
     )
     args = parser.parse_args()
 
-    (
-        packages_to_download,
-        mirror,
-        out_dir,
-        distribution,
-        version,
-        packages_file,
-        architecture,
-        fetchy_dir,
-        ppas,
-    ) = (
+    download(
         args.packages,
         args.mirror,
         args.out,
@@ -63,31 +100,8 @@ def main():
         args.architecture,
         args.fetchy_dir,
         args.ppa,
+        args.exclude,
     )
-
-    if mirror is None:
-        mirror = fty.get_mirror(distribution)
-
-    if packages_file is None:
-        packages = fty.get_packages_control_file(
-            distribution, version, architecture, mirror, fetchy_dir
-        )
-    else:
-        packages = fty.Repository(packages_file, mirror)
-
-    fty.Parser(packages).parse()
-
-    if ppas is not None:
-        for ppa in ppas:
-            ppa_packages = fty.get_packages_control_file(
-                distribution, version, architecture, fetchy_dir=fetchy_dir, ppa=ppa
-            )
-
-            fty.Parser(ppa_packages).parse()
-            packages.merge(ppa_packages)
-
-    downloader = fty.Downloader(packages, out_dir=out_dir)
-    downloader.download_package(packages_to_download)
 
 
 if __name__ == "__main__":

@@ -14,6 +14,27 @@ from fetchy import Repository
 logger = logging.getLogger(__name__)
 
 
+def gather_exclusions(exclusions):
+    """
+    Gathers a list of dependencies that should be excluded.
+
+    Exclusion values ending with a .txt extension will be
+    parsed as files and will read these files line by line.
+    """
+    dependencies_to_exclude = []
+
+    for exclusion in exclusions:
+        if exclusion.endswith(".txt"):
+            with open(exclusion, "r") as exclusion_file:
+                for exclusion_line in exclusion_file:
+                    dependencies_to_exclude.append(exclusion_line.strip())
+
+        else:
+            dependencies_to_exclude.append(exclusion)
+
+    return dependencies_to_exclude
+
+
 def get_distribution():
     """Function to acquire current Distribution
 

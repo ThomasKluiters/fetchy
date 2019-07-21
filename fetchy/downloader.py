@@ -23,7 +23,7 @@ class Downloader(object):
         self.packages = packages
         self.out_dir = out_dir
 
-    def download_package(self, package_name, version=None):
+    def download_package(self, package_name, dependencies_to_exclude=[], version=None):
         """
         Downloads a package and its' dependencies into a folder.
 
@@ -38,13 +38,18 @@ class Downloader(object):
         ----------
         package_name : string representing the name of the package
             that should be downloaded.
+        
+        dependencies_to_exclude : list of strings of names of dependencies
+            that should be excluded from the packages to download.
         """
         if not os.path.isdir(self.out_dir):
             logger.info(f"Creating output directory {self.out_dir}")
             os.mkdir(self.out_dir)
 
         logger.info(f"Gathering dependencies for {package_name}")
-        for (name, package) in self.gather_dependencies(package_name).items():
+        for (name, package) in self.gather_dependencies(
+            package_name, dependencies_to_exclude
+        ).items():
             package_file = f"{self.out_dir}/{os.path.basename(package.file_name())}"
             package_url = package.download_url()
 
@@ -65,7 +70,7 @@ class Downloader(object):
 
                 urllib.request.urlretrieve(package_url, package_file, hook)
 
-    def gather_dependencies(self, package_names):
+    def gather_dependencies(self, package_names, dependencies_to_exclude):
         """
         Gather dependencies for a package.
 
@@ -78,7 +83,10 @@ class Downloader(object):
         ----------
         package_name : string representing the name of the package
             dependencies should be gathereed for.
-        
+
+        dependencies_to_exclude : list of strings of names of dependencies
+            that should be excluded from the packages to download.
+            
         Returns
         -------
         dict
@@ -101,11 +109,17 @@ class Downloader(object):
             dependencies[_package_name] = package
 
             for dependency in package.dependencies:
-                if dependency.name not in dependencies:
+                if (
+                    dependency.name not in dependencies
+                    and dependency.name not in dependencies_to_exclude
+                ):
                     queue.append(dependency.name)
 
             for pre_dependency in package.pre_dependencies:
-                if pre_dependency.name not in dependencies:
+                if (
+                    pre_dependency.name not in dependencies
+                    and pre_dependency.name not in dependencies_to_exclude
+                ):
                     queue.append(pre_dependency.name)
 
         return dependencies
