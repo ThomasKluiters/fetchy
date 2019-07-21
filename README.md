@@ -51,6 +51,12 @@ fetchy --distribution debian --version stretch openssl
 
 If some packages are not available for your main mirror, try using a ppa:
 
+Using a name:
 ```bash
 fetchy --ppa deadsnakes python3.8
+```
+
+Using a URL:
+```bash
+fetchy --ppa https://deb.nodesource.com/node_10.x nodejs
 ```
