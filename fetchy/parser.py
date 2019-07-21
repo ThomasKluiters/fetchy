@@ -1,4 +1,4 @@
-from fetchy import package_from_dict
+from fetchy import Repository, package_from_dict
 
 
 class Parser(object):
@@ -22,7 +22,7 @@ class Parser(object):
             ]
         self.packages_file = packages_file
         self.fields = fields
-        self.pkgs = {}
+        self.repository = Repository({})
 
     def parse(self):
         """Function that parses all packages
@@ -36,21 +36,21 @@ class Parser(object):
         be populated with the fields that are
         supplied to this Parsers' Constructor.
         """
-        if self.pkgs:
-            return self.pkgs
+        if not self.repository.is_empty():
+            return self.repository
 
-        self.pkgs = {}
         with open(self.packages_file, "r") as fp:
             pkg = {}
             for line in fp:
                 # New packages are introduced with whitespaces
                 if line.startswith("\r\n") or line.startswith("\n"):
                     if pkg:
-                        self.pkgs[pkg["Package"]] = package_from_dict(pkg)
+                        self.repository.add(package_from_dict(pkg))
                         pkg = {}
 
                 for field in self.fields:
                     if line.startswith(field):
                         pkg[field] = line.rstrip()[(len(field) + 2) :]
                         break
-        return self.pkgs
+                        
+        return self.repository

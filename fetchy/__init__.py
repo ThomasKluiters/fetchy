@@ -8,6 +8,7 @@ from .dependency import (
     dependencies_from_string,
 )
 from .package import Package, package_from_dict
+from .repository import Repository
 from .parser import Parser
 from .downloader import Downloader
 from .utils import *
