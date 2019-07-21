@@ -13,6 +13,9 @@ def main():
         help="the default mirror to use, defaults to the best mirror fetchy can find",
     )
     parser.add_argument(
+        "--ppa", help="a ppa to add to the repository of packages", action="append"
+    )
+    parser.add_argument(
         "--out",
         help="the directory to download the packages into, defaults to ./packages",
         default="packages",
@@ -46,6 +49,7 @@ def main():
         packages_file,
         architecture,
         fetchy_dir,
+        ppas,
     ) = (
         args.package,
         args.mirror,
@@ -55,18 +59,30 @@ def main():
         args.packages_file,
         args.architecture,
         args.fetchy_dir,
+        args.ppa,
     )
 
     if mirror is None:
         mirror = fty.get_mirror(distribution)
 
     if packages_file is None:
-        packages_file = fty.get_packages_control_file(
+        packages = fty.get_packages_control_file(
             distribution, version, architecture, mirror, fetchy_dir
         )
+    else:
+        packages = fty.Repository(packages_file, mirror)
 
-    packages = fty.Parser(packages_file).parse()
-    downloader = fty.Downloader(packages, mirror=mirror, out_dir=out_dir)
+    fty.Parser(packages).parse()
+
+    for ppa in ppas:
+        ppa_packages = fty.get_packages_control_file(
+            distribution, version, architecture, fetchy_dir=fetchy_dir, ppa=ppa
+        )
+
+        fty.Parser(ppa_packages).parse()
+        packages.merge(ppa_packages)
+
+    downloader = fty.Downloader(packages, out_dir=out_dir)
     downloader.download_package(package)
 
 

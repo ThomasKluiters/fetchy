@@ -1,7 +1,7 @@
 from fetchy import version_from_string, dependencies_from_string
 
 
-def package_from_dict(dictionary):
+def package_from_dict(dictionary, origin):
     if "Package" not in dictionary:
         raise RuntimeError("Mandatory package field is not present!")
     if "Version" not in dictionary:
@@ -13,6 +13,7 @@ def package_from_dict(dictionary):
         dictionary["Package"],
         version_from_string(dictionary["Version"]),
         dictionary["Architecture"],
+        origin,
         dependencies_from_string("Depends", dictionary.get("Depends")),
         dependencies_from_string("Pre-Depends", dictionary.get("Pre-Depends")),
         dictionary.get("Filename"),
@@ -29,7 +30,14 @@ def unify(left, right):
 
 class Package(object):
     def __init__(
-        self, name, version, arch, dependencies=[], pre_dependencies=[], filename=None
+        self,
+        name,
+        version,
+        arch,
+        origin,
+        dependencies=[],
+        pre_dependencies=[],
+        filename=None,
     ):
         """A Package Object
         
@@ -48,9 +56,13 @@ class Package(object):
         self.name = name
         self.version = version
         self.arch = arch
+        self.origin = origin
         self.dependencies = dependencies
         self.pre_dependencies = pre_dependencies
         self._file_name = filename
+
+    def download_url(self):
+        return f"{self.origin}{self.file_name()}"
 
     def file_name(self):
         if self._file_name is None:

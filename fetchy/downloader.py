@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 
 class Downloader(object):
-    def __init__(self, packages, mirror=None, out_dir="./out"):
+    def __init__(self, packages, out_dir="./out"):
         """
         The Downloader class is responsible for downloading packages and it's dependencies.
 
@@ -16,15 +16,11 @@ class Downloader(object):
         ----------
         packages : a dictionary containing a collection of packages this
             Downloader may use to satisfy dependencies.
-        
-        mirror : the url of the mirror that will be used when downloading
-            packages.
 
         out_dir : the output directory this Downloader will download packages
             into.
         """
         self.packages = packages
-        self.mirror = mirror
         self.out_dir = out_dir
 
     def download_package(self, package_name, version=None):
@@ -49,8 +45,8 @@ class Downloader(object):
 
         logger.info(f"Gathering dependencies for {package_name}")
         for (name, package) in self.gather_dependencies(package_name).items():
-            package_url = f"{self.mirror}/{package.file_name()}"
             package_file = f"{self.out_dir}/{os.path.basename(package.file_name())}"
+            package_url = package.download_url()
 
             logger.info(f"Downloading package {name} at {package_url}")
 

@@ -33,8 +33,6 @@ Download required packages for python3-minimal
 fetchy python3.6-minimal
 ```
 
-  
-
 Download required packages for libc6 into a specific directory
 
 ```bash
@@ -45,4 +43,14 @@ Download required packages for openssl for ubuntu
 
 ```bash
 fetchy --distribution debian --version stretch openssl
+```
+
+### Advanced features
+
+#### Using PPA's
+
+If some packages are not available for your main mirror, try using a ppa:
+
+```bash
+fetchy --ppa deadsnakes python3.8
 ```

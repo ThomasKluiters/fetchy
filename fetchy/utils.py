@@ -5,8 +5,11 @@ import distro
 import shutil
 import platform
 import logging
+import validators
 
 from tqdm import tqdm
+
+from fetchy import Repository
 
 logger = logging.getLogger(__name__)
 
@@ -49,6 +52,28 @@ def get_mirror(distribution=None):
     return f"http://ftp.{distribution}.{extension}/{distribution}/"
 
 
+def get_ppa_url(ppa, distribution=None):
+    """
+    If a user supplies a ppa it might either be
+    a URL pointing to the repository or a name of a
+    ppa.
+
+    If the user supplied a valid URL then we will simply
+    use thise URL for the ppa.
+
+    If the user supplied a name, then we will attempt to 
+    construct a ppa url hosted on launchpad.
+    """
+    if validators.url(ppa):
+        if not ppa.endswith("/"):
+            return f"{ppa}/"
+        return ppa
+
+    if distribution is None:
+        distribution = get_distribution()
+    return f"http://ppa.launchpad.net/{ppa}/ppa/{distribution}/"
+
+
 def get_fetchy_dir():
     """Function to acquire default fetchy dir
 
@@ -59,14 +84,21 @@ def get_fetchy_dir():
 
 
 def get_packages_file_location(
-    fetchy_dir, distribution, distribution_version, architecture
+    fetchy_dir, distribution, distribution_version, architecture, ppa=None
 ):
     """Function to acquire package location
 
     Each Packages file is stored in a uniquely
     identifiable way.
     """
-    return f"{fetchy_dir}/Packages-{architecture}-{distribution}-{distribution_version}"
+    base = f"{fetchy_dir}/Packages-{architecture}-{distribution}-{distribution_version}"
+
+    if ppa is not None:
+        if validators.url(ppa):
+            ppa = os.path.basename(ppa)
+        return f"{base}-{ppa}"
+
+    return base
 
 
 def get_packages_control_file(
@@ -75,6 +107,7 @@ def get_packages_control_file(
     architecture=None,
     mirror=None,
     fetchy_dir=None,
+    ppa=None,
 ):
     """Function to download (or get) the packages control file
 
@@ -105,13 +138,16 @@ def get_packages_control_file(
         architecture = get_architecture()
 
     if mirror is None:
-        mirror = get_mirror(distribution)
+        if ppa is not None:
+            mirror = get_ppa_url(ppa, distribution)
+        else:
+            mirror = get_mirror(distribution)
 
     if fetchy_dir is None:
         fetchy_dir = get_fetchy_dir()
 
     packages_file = get_packages_file_location(
-        fetchy_dir, distribution, distribution_version, architecture
+        fetchy_dir, distribution, distribution_version, architecture, ppa
     )
 
     logger.info(f"Using Package file {packages_file}")
@@ -146,4 +182,4 @@ def get_packages_control_file(
 
         os.remove(packages_file_tar)
 
-    return packages_file
+    return Repository(packages_file, mirror)
