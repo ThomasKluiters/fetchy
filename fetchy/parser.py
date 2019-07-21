@@ -2,7 +2,7 @@ from fetchy import Repository, package_from_dict
 
 
 class Parser(object):
-    def __init__(self, packages_file, fields=None):
+    def __init__(self, repository, fields=None):
         """The Control File Parser
 
         This class is responsible for parsing
@@ -20,9 +20,8 @@ class Parser(object):
                 "Filename",
                 "Architecture",
             ]
-        self.packages_file = packages_file
+        self.repository = repository
         self.fields = fields
-        self.repository = Repository({})
 
     def parse(self):
         """Function that parses all packages
@@ -39,18 +38,20 @@ class Parser(object):
         if not self.repository.is_empty():
             return self.repository
 
-        with open(self.packages_file, "r") as fp:
+        with open(self.repository.packages_file, "r") as fp:
             pkg = {}
             for line in fp:
                 # New packages are introduced with whitespaces
                 if line.startswith("\r\n") or line.startswith("\n"):
                     if pkg:
-                        self.repository.add(package_from_dict(pkg))
+                        self.repository.add(
+                            package_from_dict(pkg, self.repository.mirror)
+                        )
                         pkg = {}
 
                 for field in self.fields:
                     if line.startswith(field):
                         pkg[field] = line.rstrip()[(len(field) + 2) :]
                         break
-                        
+
         return self.repository
