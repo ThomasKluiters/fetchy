@@ -33,6 +33,13 @@ Download required packages for python3-minimal
 fetchy python3.6-minimal
 ```
 
+
+Download required packages for python3.6 and postgresql
+
+```bash
+fetchy python3.6 postgresql
+```
+
 Download required packages for libc6 into a specific directory
 
 ```bash

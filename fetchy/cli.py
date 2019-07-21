@@ -6,7 +6,10 @@ import fetchy as fty
 def main():
     parser = argparse.ArgumentParser(description="Fetchy: Download Linux packages.")
     parser.add_argument(
-        "package", metavar="PACKAGE", help="the package fetchy should download"
+        "packages",
+        metavar="PACKAGES",
+        help="the package fetchy should download",
+        nargs="+"
     )
     parser.add_argument(
         "--mirror",
@@ -41,7 +44,7 @@ def main():
     args = parser.parse_args()
 
     (
-        package,
+        packages_to_download,
         mirror,
         out_dir,
         distribution,
@@ -51,7 +54,7 @@ def main():
         fetchy_dir,
         ppas,
     ) = (
-        args.package,
+        args.packages,
         args.mirror,
         args.out,
         args.distribution,
@@ -74,16 +77,17 @@ def main():
 
     fty.Parser(packages).parse()
 
-    for ppa in ppas:
-        ppa_packages = fty.get_packages_control_file(
-            distribution, version, architecture, fetchy_dir=fetchy_dir, ppa=ppa
-        )
+    if ppas is not None:
+        for ppa in ppas:
+            ppa_packages = fty.get_packages_control_file(
+                distribution, version, architecture, fetchy_dir=fetchy_dir, ppa=ppa
+            )
 
-        fty.Parser(ppa_packages).parse()
-        packages.merge(ppa_packages)
+            fty.Parser(ppa_packages).parse()
+            packages.merge(ppa_packages)
 
     downloader = fty.Downloader(packages, out_dir=out_dir)
-    downloader.download_package(package)
+    downloader.download_package(packages_to_download)
 
 
 if __name__ == "__main__":
