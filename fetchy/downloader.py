@@ -65,7 +65,7 @@ class Downloader(object):
 
                 urllib.request.urlretrieve(package_url, package_file, hook)
 
-    def gather_dependencies(self, package_name):
+    def gather_dependencies(self, package_names):
         """
         Gather dependencies for a package.
 
@@ -86,7 +86,10 @@ class Downloader(object):
             the given package. Each dependency is stored as a Package
             object and uses the package name as key.
         """
-        queue = [package_name]
+        if isinstance(package_names, str):
+            package_names = [package_names]
+
+        queue = package_names
 
         dependencies = {}
 
