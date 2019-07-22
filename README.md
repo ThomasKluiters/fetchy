@@ -98,3 +98,7 @@ Or both!
 ```bash
 fetchy --ppa https://deb.nodesource.com/node_10.x --ppa deadsnakes python3.8 nodejs
 ```
+
+### Backlog
+
+- Docker integration
