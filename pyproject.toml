@@ -11,6 +11,7 @@ python = "^3.6"
 tqdm = "^4.32"
 distro = "^1.4"
 validators = "^0.13.0"
+PyInquirer = "^1.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^3.0"

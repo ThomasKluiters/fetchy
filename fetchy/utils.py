@@ -8,7 +8,6 @@ import logging
 import validators
 
 from tqdm import tqdm
-
 from fetchy import Repository
 
 logger = logging.getLogger(__name__)
@@ -35,6 +34,10 @@ def gather_exclusions(exclusions):
     return dependencies_to_exclude
 
 
+def is_os_supported():
+    return distro.id() in ["debian", "ubuntu"]
+
+
 def get_distribution():
     """Function to acquire current Distribution
 
@@ -45,7 +48,8 @@ def get_distribution():
 
 
 def get_distribution_version():
-    """Function to acquire current Distribution Version
+    """
+    Function to acquire current Distribution Version
 
     This function will return the current distribution version
     if the user is running on a Linux machine.
@@ -195,7 +199,17 @@ def get_packages_control_file(
                     t.total = tsize
                 t.update(b * bsize - t.n)
 
-            urllib.request.urlretrieve(packages_url, packages_file_tar, hook)
+            try:
+                urllib.request.urlretrieve(packages_url, packages_file_tar, hook)
+            except urllib.error.HTTPError as e:
+                t.close()
+                logger.error(
+                    f"The combination of {distribution}, {distribution_version} and {architecture} does "
+                    f"not seem to be valid. Is '{distribution_version}' a valid version of {distribution}?"
+                )
+                import sys
+
+                sys.exit()
 
         with gzip.open(packages_file_tar, "rb") as data_in:
             with open(packages_file, "wb") as data_out:

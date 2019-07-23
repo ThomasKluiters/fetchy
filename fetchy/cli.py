@@ -2,6 +2,8 @@ import argparse
 
 import fetchy as fty
 
+from PyInquirer import prompt
+
 
 def download(
     packages_to_download,
@@ -15,6 +17,33 @@ def download(
     ppas,
     exclusions,
 ):
+    prompts = []
+
+    if not fty.is_os_supported():
+        if distribution is None:
+            prompts.append(
+                {
+                    "type": "list",
+                    "message": "Sorry, your operating system is not currently supported, please select one:",
+                    "name": "distribution",
+                    "choices": ["ubuntu", "debian"],
+                }
+            )
+        if version is None:
+            prompts.append(
+                {
+                    "type": "input",
+                    "name": "version",
+                    "message": "Please enter the version of the operating system you'd like to use (e.g. `buster`):",
+                }
+            )
+        if prompts:
+            answers = prompt(prompts)
+            if "distribution" in answers:
+                distribution = answers["distribution"]
+            if "version" in answers:
+                version = answers["version"]
+
     if mirror is None:
         mirror = fty.get_mirror(distribution)
 
