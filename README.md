@@ -24,7 +24,7 @@ pip install fetchy
 
 ## Deveoping
 
-Fetchy uses [https://github.com/sdispater/poetry](poetry) to build all sources and collect all requirements. 
+Fetchy uses [poetry](https://github.com/sdispater/poetry) to build all sources and collect all requirements. 
 The project can be set up through the following sequence of commands:
 
 ```bash
