@@ -22,7 +22,7 @@ Fetchy can be installed by running the following command:
 pip install fetchy
 ```
 
-## Deveoping
+## Developing
 
 Fetchy uses [poetry](https://github.com/sdispater/poetry) to build all sources and collect all requirements. 
 The project can be set up through the following sequence of commands:
