@@ -38,7 +38,7 @@ class Parser(object):
         if not self.repository.is_empty():
             return self.repository
 
-        with open(self.repository.packages_file, "r") as fp:
+        with open(self.repository.packages_file, "r", encoding='utf-8') as fp:
             pkg = {}
             for line in fp:
                 # New packages are introduced with whitespaces
