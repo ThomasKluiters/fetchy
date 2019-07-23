@@ -1,4 +1,4 @@
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 from .version import Version, version_from_string
 from .dependency import (
