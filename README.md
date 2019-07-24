@@ -82,7 +82,7 @@ dpkg
 
 Using a name:
 ```bash
-fetchy -dockerize -exclude exclusions.txt python3
+fetchy dockerize -exclude exclusions.txt python3
 ```
 
 Note: exclusion files MUST end with a .txt extension!
