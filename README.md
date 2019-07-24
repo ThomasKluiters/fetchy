@@ -10,6 +10,21 @@ Furthermore, it is possible to customize the operating system,
 architecture and operating system version to fetch the latest (secure)
 packages from a package mirror.
 
+## How does Fetchy work?
+
+Fetchy works by downloading debian / ubuntu packages based on some
+parameter you supply Fetchy. For example, if you tell fetchy to use
+ubuntu as a distribution and bionic as its version and download python
+Fetchy will look for available packages under `python` and download the
+packages required to run `python`. Then, if tasked to do so, Fetchy will
+extract the files of all the packages and wrap them in a Docker image.
+
+## Does Fetchy have any effect on my system?
+
+No, files will only be downloaded to your current working directory.
+
+Furthermore, a folder will be created under ~/.fetchy for caching.
+
 ## Installing
 
 Fetchy can be installed by running the following command:
