@@ -6,6 +6,7 @@ from PyInquirer import prompt
 
 
 def download(
+    mode,
     packages_to_download,
     mirror,
     out_dir,
@@ -17,6 +18,7 @@ def download(
     ppas,
     exclusions,
     extract,
+    tag,
 ):
     prompts = []
 
@@ -35,7 +37,7 @@ def download(
                 {
                     "type": "input",
                     "name": "version",
-                    "message": "Please enter the version of the operating system you'd like to use (e.g. `buster`):",
+                    "message": "Please enter the version of the operating system you'd like to use (e.g. `bionic`):",
                 }
             )
         if prompts:
@@ -44,6 +46,10 @@ def download(
                 distribution = answers["distribution"]
             if "version" in answers:
                 version = answers["version"]
+
+    if tag is None:
+        formatted_packages = "-".join(packages_to_download)
+        tag = f"{formatted_packages}-image"
 
     if mirror is None:
         mirror = fty.get_mirror(distribution)
@@ -68,14 +74,27 @@ def download(
     dependencies_to_exclude = fty.gather_exclusions(exclusions)
 
     downloader = fty.Downloader(packages, out_dir=out_dir)
-    downloader.download_package(packages_to_download, dependencies_to_exclude)
+    downloaded_packages = downloader.download_package(
+        packages_to_download, dependencies_to_exclude
+    )
 
-    if extract:
-        fty.Extractor().extract_all(out_dir)
+    extract_dir = f"extracted-{tag}"
+
+    if extract or mode == "dockerize":
+        fty.Extractor(extract_dir).extract_all(downloaded_packages)
+
+    if mode == "dockerize":
+        fty.Dockerizer(tag, extract_dir).build()
 
 
 def main():
     parser = argparse.ArgumentParser(description="Fetchy: Download Linux packages.")
+    parser.add_argument(
+        "mode",
+        metavar="MODE",
+        help="the mode, either download or dockerize",
+        choices=["dockerize", "download"],
+    )
     parser.add_argument(
         "packages",
         metavar="PACKAGES",
@@ -124,9 +143,11 @@ def main():
     parser.add_argument(
         "--extract", dest="extract", action="store_true", help="Extract files."
     )
+    parser.add_argument("--tag", dest="tag")
     args = parser.parse_args()
 
     download(
+        args.mode,
         args.packages,
         args.mirror,
         args.out,
@@ -138,6 +159,7 @@ def main():
         args.ppa,
         args.exclude,
         args.extract,
+        args.tag,
     )
 
 

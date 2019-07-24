@@ -12,5 +12,6 @@ from .downloader import Downloader
 from .repository import Repository
 from .extractor import Extractor
 from .parser import Parser
+from .dockerizer import Dockerizer
 from .utils import *
 from .cli import main as cli

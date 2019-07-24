@@ -13,6 +13,7 @@ distro = "^1.4"
 validators = "^0.13.0"
 PyInquirer = "^1.0"
 unix_ar = "^0.2.1"
+docker = "^4.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^3.0"

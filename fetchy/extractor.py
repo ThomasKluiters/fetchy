@@ -22,15 +22,10 @@ class Extractor(object):
                 tar_file.extractall(self.root)
         package_file.close()
 
-    def extract_all(self, path):
+    def extract_all(self, packages_files):
         """
-        Extracts all debian packages found at the specified path.
+        Extracts all debian packages given as an argument.
         """
-        packages_files = []
-        for file in os.listdir(path):
-            if file.endswith(".deb"):
-                packages_files.append(file)
-
         with tqdm(
             unit="B",
             unit_scale=True,
@@ -40,5 +35,5 @@ class Extractor(object):
             desc=f"Extracting packages...",
         ) as t:
             for package_file in packages_files:
-                self.extract(os.path.join(path, package_file))
+                self.extract(package_file)
                 t.update(1)

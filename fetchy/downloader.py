@@ -23,7 +23,7 @@ class Downloader(object):
         self.packages = packages
         self.out_dir = out_dir
 
-    def download_package(self, package_name, dependencies_to_exclude=[], version=None):
+    def download_package(self, package_names, dependencies_to_exclude=[], version=None):
         """
         Downloads a package and its' dependencies into a folder.
 
@@ -41,14 +41,21 @@ class Downloader(object):
         
         dependencies_to_exclude : list of strings of names of dependencies
             that should be excluded from the packages to download.
+        Returns
+        -------
+        downloaded_files : a list of package files that have been
+            downloaded
         """
         if not os.path.isdir(self.out_dir):
             logger.info(f"Creating output directory {self.out_dir}")
             os.mkdir(self.out_dir)
 
-        logger.info(f"Gathering dependencies for {package_name}")
+        logger.info(f"Gathering dependencies for {package_names}")
+
+        downloaded_files = []
+
         for (name, package) in self.gather_dependencies(
-            package_name, dependencies_to_exclude
+            package_names, dependencies_to_exclude
         ).items():
             package_file = f"{self.out_dir}/{os.path.basename(package.file_name())}"
             package_url = package.download_url()
@@ -69,6 +76,10 @@ class Downloader(object):
                     t.update(b * bsize - t.n)
 
                 urllib.request.urlretrieve(package_url, package_file, hook)
+
+                downloaded_files.append(package_file)
+
+        return downloaded_files
 
     def gather_dependencies(self, package_names, dependencies_to_exclude):
         """
