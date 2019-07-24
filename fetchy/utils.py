@@ -63,7 +63,12 @@ def get_architecture():
     For now let's make some simple assumptions that 64bit -> amd64.
     """
     (arch, _) = platform.architecture()
-    return {"64bit": "amd64"}[arch]
+    mapping = {"64bit": "amd64", "32bit": "i386"}
+    if arch not in mapping:
+        logger.error(
+            f"{arch} is not recognized. Please specify the architecture you want to use (e.g. --architecture amd64)."
+        )
+    return mapping[arch]
 
 
 def get_mirror(distribution=None):

@@ -1,18 +1,14 @@
-# Fetchy - A Python utility to download debian packages
+# Fetchy - A Python utility to easily build minimal docker images
   
 ## Why Fetchy?
 
-Fetchy can be used to download the absolute minimal dependencies required 
-for a specific package. Fetchy aims to make it easier to acquire packages
-for any architecture and any version of a package. Tools like `apt-get`
-do not offer sufficient functionality to *only* download required packages
-regardless of the architecture `apt-get` is running on.
+Fetchy can be used to build minimal docker images with the minimal set
+of dependencies required, significantly reducing the size of your Docker
+images.
 
-## What can Fetchy be used for?
-
-Fetchy can be used for the construction of Docker images. For example,
-creating a docker image with *just* python3.6 which can be quite challenging
-using existing tools.
+Furthermore, it is possible to customize the operating system,
+architecture and operating system version to fetch the latest (secure)
+packages from a package mirror.
 
 ## Installing
 
@@ -20,6 +16,86 @@ Fetchy can be installed by running the following command:
 
 ```bash
 pip install fetchy
+```
+
+## Examples
+
+Some existing images can be found here https://github.com/ThomasKluiters/fetchy-images 
+
+Fetchy can be used as a command line utility, though, it
+also offers an API.
+
+Create a minimal docker image for a python environment based
+on your current operating system and architecture.
+
+```bash
+fetchy dockerize python
+```
+
+You can specify multiple packages:
+
+```bash
+fetchy dockerize python3.6 postgresql
+```
+
+Download required packages for libc6 into a specific directory
+
+```bash
+fetchy download --out libc-packages libc6
+```
+
+If you want to build a docker image based on another operating
+system (debian stretch in this example), this is also possible:
+
+```bash
+fetchy dockerize --distribution debian --version stretch openssl
+```
+
+### Advanced features
+
+#### Excluding dependencies
+
+If some packages are unwanted, you can simply exclude them:
+
+Using a name:
+```bash
+fetchy dockerize --exclude dpkg --exclude perl-base python3
+```
+
+It is also possible to create an exclusion file, where each line
+denotes a dependency that should not be included:
+
+
+exclusions.txt
+```
+perl-base
+dpkg
+```
+
+Using a name:
+```bash
+fetchy -dockerize -exclude exclusions.txt python3
+```
+
+Note: exclusion files MUST end with a .txt extension!
+
+#### Using PPA's
+
+If some packages are not available for your main mirror, try using a ppa:
+
+Using a name:
+```bash
+fetchy dockerize --ppa deadsnakes python3.8
+```
+
+Using a URL:
+```bash
+fetchy dockerize --ppa https://deb.nodesource.com/node_10.x nodejs
+```
+
+Or both!
+```bash
+fetchy dockerize --ppa https://deb.nodesource.com/node_10.x --ppa deadsnakes python3.8 nodejs
 ```
 
 ## Developing
@@ -35,83 +111,6 @@ poetry install
 poetry shell
 ```
 
-## Examples
-
-Fetchy can be used as a command line utility, though, it
-also offers an API.
-
-Download required packages for python3-minimal
-
-```bash
-fetchy python3.6-minimal
-```
-
-
-Download required packages for python3.6 and postgresql
-
-```bash
-fetchy python3.6 postgresql
-```
-
-Download required packages for libc6 into a specific directory
-
-```bash
-fetchy --out libc-packages libc6
-```
-
-Download required packages for openssl for ubuntu
-
-```bash
-fetchy --distribution debian --version stretch openssl
-```
-
-### Advanced features
-
-#### Excluding dependencies
-
-If some packages are unwanted, you can simply exclude them:
-
-Using a name:
-```bash
-fetchy --exclude dpkg --exclude perl-base python3
-```
-
-It is also possible to create an exclusion file, where each line
-denotes a dependency that should not be included:
-
-
-exclusions.txt
-```
-perl-base
-dpkg
-```
-
-Using a name:
-```bash
-fetchy --exclude exclusions.txt python3
-```
-
-Note: exclusion files MUST end with a .txt extension!
-
-#### Using PPA's
-
-If some packages are not available for your main mirror, try using a ppa:
-
-Using a name:
-```bash
-fetchy --ppa deadsnakes python3.8
-```
-
-Using a URL:
-```bash
-fetchy --ppa https://deb.nodesource.com/node_10.x nodejs
-```
-
-Or both!
-```bash
-fetchy --ppa https://deb.nodesource.com/node_10.x --ppa deadsnakes python3.8 nodejs
-```
-
 ### Backlog
 
-- Docker integration
+- Docker integration [x]
