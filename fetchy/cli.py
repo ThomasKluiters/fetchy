@@ -16,6 +16,7 @@ def download(
     fetchy_dir,
     ppas,
     exclusions,
+    extract,
 ):
     prompts = []
 
@@ -69,6 +70,9 @@ def download(
     downloader = fty.Downloader(packages, out_dir=out_dir)
     downloader.download_package(packages_to_download, dependencies_to_exclude)
 
+    if extract:
+        fty.Extractor().extract_all(out_dir)
+
 
 def main():
     parser = argparse.ArgumentParser(description="Fetchy: Download Linux packages.")
@@ -117,6 +121,9 @@ def main():
         help="the home directory for fetchy",
         default=fty.get_fetchy_dir(),
     )
+    parser.add_argument(
+        "--extract", dest="extract", action="store_true", help="Extract files."
+    )
     args = parser.parse_args()
 
     download(
@@ -130,6 +137,7 @@ def main():
         args.fetchy_dir,
         args.ppa,
         args.exclude,
+        args.extract,
     )
 
 
