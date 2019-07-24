@@ -14,8 +14,16 @@ packages from a package mirror.
 
 Fetchy can be installed by running the following command:
 
+Any of:
+
+```bash
+pip3 install fetchy
+```
 ```bash
 pip install fetchy
+```
+```bash
+python3 -m pip install fetchy
 ```
 
 ## Examples
