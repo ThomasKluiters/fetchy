@@ -57,7 +57,7 @@ class Downloader(object):
         for (name, package) in self.gather_dependencies(
             package_names, dependencies_to_exclude
         ).items():
-            package_file = f"{self.out_dir}/{os.path.basename(package.file_name())}"
+            package_file = os.path.join(self.out_dir, os.path.basename(package.file_name()))
             package_url = package.download_url()
 
             logger.info(f"Downloading package {name} at {package_url}")
