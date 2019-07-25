@@ -9,8 +9,41 @@ import validators
 
 from tqdm import tqdm
 from fetchy import Repository
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
+
+_known_versions = {
+    "ubuntu": [
+        "devel",
+        "precise",
+        "cosmic",
+        "trusty",
+        "xenial",
+        "disco",
+        "eoan",
+        "bionic"
+    ],
+    "debian": [
+        "buzz",
+        "rex",
+        "bo",
+        "hamm",
+        "slink",
+        "potato",
+        "woody",
+        "sarge",
+        "etch",
+        "lenny",
+        "squeeze",
+        "wheezy",
+        "jessie",
+        "stretch",
+        "buster",
+        "bullseye",
+        "sid"
+    ],
+}
 
 
 def gather_exclusions(exclusions):
@@ -34,8 +67,20 @@ def gather_exclusions(exclusions):
     return dependencies_to_exclude
 
 
-def is_os_supported():
-    return distro.id() in ["debian", "ubuntu"]
+def is_os_supported(distribution=None):
+    if distribution is None:
+        distribution = distro.id()
+    return distribution in ["debian", "ubuntu"]
+
+
+def is_version_supported(distribution, version):
+    if not is_os_supported(distribution=distribution):
+        return False
+    return version in _known_versions[distribution]
+
+
+def get_supported_versions_for(distribution):
+    return reversed(_known_versions[distribution])
 
 
 def get_distribution():
@@ -109,8 +154,8 @@ def get_fetchy_dir():
 
     Here the Packages list is stored.
     """
-    home = os.path.expanduser("~")
-    return f"{home}/.fetchy"
+    home = str(Path.home())
+    return os.path.join(home, ".fetchy")
 
 
 def get_packages_file_location(
