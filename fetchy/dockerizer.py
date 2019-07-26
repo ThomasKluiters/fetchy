@@ -24,10 +24,11 @@ class Dockerizer(object):
         self.tag = tag
         self.context = context
 
-    def build(self):
-        dockerfile = """
+    def build(self, binaries):
+        path = ":".join(binaries)
+        dockerfile = f"""
         FROM scratch
-        ENV PATH /usr/bin/:/bin/
+        ENV PATH {path}
         COPY . /
         """
 

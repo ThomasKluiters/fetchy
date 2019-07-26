@@ -183,6 +183,7 @@ def get_packages_control_file(
     mirror=None,
     fetchy_dir=None,
     ppa=None,
+    updates=False,
 ):
     """Function to download (or get) the packages control file
 
@@ -235,8 +236,15 @@ def get_packages_control_file(
         os.mkdir(fetchy_dir)
 
     if not os.path.isfile(packages_file):
-        packages_url = f"{mirror}dists/{distribution_version}/main/binary-{architecture}/Packages.gz"
-        packages_file_tar = packages_file + ".gz"
+        if updates:
+            packages_url = f"{mirror}dists/{distribution_version}-updates/main/binary-{architecture}/Packages.gz"
+        else:
+            packages_url = f"{mirror}dists/{distribution_version}/main/binary-{architecture}/Packages.gz"
+
+        if updates:
+            packages_file_tar = packages_file + "-updates.gz"
+        else:
+            packages_file_tar = packages_file + ".gz"
 
         logger.warning(f"Packages file does not exist, fetching {packages_url}")
 

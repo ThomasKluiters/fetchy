@@ -123,12 +123,20 @@ class Downloader(object):
 
             for dependency in package.dependencies:
                 name = self.find_best_candidate(dependency.resolve())
-                if name not in dependencies and name not in dependencies_to_exclude:
+                if (
+                    name
+                    and name not in dependencies
+                    and name not in dependencies_to_exclude
+                ):
                     queue.append(name)
 
             for pre_dependency in package.pre_dependencies:
                 name = self.find_best_candidate(pre_dependency.resolve())
-                if name not in dependencies and name not in dependencies_to_exclude:
+                if (
+                    name
+                    and name not in dependencies
+                    and name not in dependencies_to_exclude
+                ):
                     queue.append(name)
 
         return dependencies
@@ -143,6 +151,9 @@ class Downloader(object):
         for name in names:
             if name in self.packages:
                 to_consider.append(name)
+
+        if not to_consider:
+            return None
 
         return sorted(
             to_consider, key=lambda package: self.packages[package].installed_size

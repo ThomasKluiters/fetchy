@@ -42,7 +42,7 @@ class FetchyPackageCommand(FetchyCommandBase):
             self.fetchy.config.update("distribution", self.option("distribution"))
 
         if self.option("codename"):
-            self.fetchy.config.update("version", self.option("distribution"))
+            self.fetchy.config.update("version", self.option("codename"))
 
         if self.option("architecture"):
             self.fetchy.config.update("architecture", self.option("distribution"))

@@ -12,22 +12,35 @@ class Extractor(object):
         """
         self.root = root
 
-    def extract(self, package_path):
+    def extract_tar_file(self, package_path):
         """
         Extract a single debian package into the specified root directory.
         """
-        package_file = arfile.open(package_path)
-        for info in package_file.infolist():
-            if info.name.decode().startswith("data.tar"):
-                with package_file.open(info.name.decode()) as tar_ball:
-                    with tarfile.open(fileobj=tar_ball) as tar_file:
-                        tar_file.extractall(self.root)
-        package_file.close()
+        try:
+            package_file = arfile.open(package_path)
+            for info in package_file.infolist():
+                if info.name.decode().startswith("data.tar"):
+                    with package_file.open(info.name.decode()) as tar_ball:
+                        with tarfile.open(fileobj=tar_ball) as tar_file:
+                            tar_file.extractall(self.root)
+                            return self.extract_binary_paths(tar_file)
+        finally:
+            package_file.close()
+
+    def extract_binary_paths(self, tar_file):
+        """
+        Find binaries for a specific package.
+        """
+        return set(
+            [name.lstrip(":") for name in tar_file.getnames() if name.endswith("/bin")]
+        )
 
     def extract_all(self, packages_files):
         """
         Extracts all debian packages given as an argument.
         """
+        binaries = set()
+
         with tqdm(
             unit="B",
             unit_scale=True,
@@ -37,5 +50,7 @@ class Extractor(object):
             desc=f"Extracting packages...",
         ) as t:
             for package_file in packages_files:
-                self.extract(package_file)
+                paths = self.extract_tar_file(package_file)
+                binaries.update(paths)
                 t.update(1)
+        return binaries
