@@ -20,6 +20,18 @@ class Fetchy(object):
 
         fty.Parser(repository).parse()
 
+        updated_repository = fty.get_packages_control_file(
+            self.config.distribution,
+            self.config.version,
+            self.config.architecture,
+            self.config.mirror,
+            updates=True,
+        )
+
+        fty.Parser(updated_repository).parse()
+
+        repository.merge(updated_repository)
+
         for ppa in self.config.ppas:
             ppa_repository = fty.get_packages_control_file(
                 self.config.distribution,
@@ -50,14 +62,10 @@ class Fetchy(object):
             temp_download_dir, packages_to_extract
         )
 
-        fty.Extractor(extract_dir).extract_all(downloaded_packages)
+        return fty.Extractor(extract_dir).extract_all(downloaded_packages)
 
     def dockerize_packages(self, tag, packages_to_dockerize):
         temp_extract_dir = tempfile.mkdtemp()
-        self.extract_packages(temp_extract_dir, packages_to_dockerize)
+        binaries = self.extract_packages(temp_extract_dir, packages_to_dockerize)
 
-        import os
-
-        os.listdir(temp_extract_dir)
-
-        fty.Dockerizer(tag, temp_extract_dir).build()
+        fty.Dockerizer(tag, temp_extract_dir).build(binaries)
