@@ -124,7 +124,7 @@ def get_mirror(distribution=None):
     if distribution is None:
         distribution = get_distribution()
     extension = {"ubuntu": "com", "debian": "org"}[distribution]
-    return f"http://ftp.{distribution}.{extension}/{distribution}/"
+    return f"http://security.{distribution}.{extension}/{distribution}/"
 
 
 def get_ppa_url(ppa, distribution=None):
@@ -159,14 +159,23 @@ def get_fetchy_dir():
 
 
 def get_packages_file_location(
-    fetchy_dir, distribution, distribution_version, architecture, ppa=None
+    fetchy_dir,
+    distribution,
+    distribution_version,
+    architecture,
+    repository,
+    ppa=None,
+    suffix=None,
 ):
     """Function to acquire package location
 
     Each Packages file is stored in a uniquely
     identifiable way.
     """
-    base = f"{fetchy_dir}/Packages-{architecture}-{distribution}-{distribution_version}"
+    base = f"{fetchy_dir}/Packages-{architecture}-{distribution}-{distribution_version}-{repository}"
+
+    if suffix:
+        base = base + "-" + suffix
 
     if ppa is not None:
         if validators.url(ppa):
@@ -181,9 +190,10 @@ def get_packages_control_file(
     distribution_version=None,
     architecture=None,
     mirror=None,
+    repository=None,
     fetchy_dir=None,
     ppa=None,
-    updates=False,
+    suffix=None,
 ):
     """Function to download (or get) the packages control file
 
@@ -223,7 +233,13 @@ def get_packages_control_file(
         fetchy_dir = get_fetchy_dir()
 
     packages_file = get_packages_file_location(
-        fetchy_dir, distribution, distribution_version, architecture, ppa
+        fetchy_dir,
+        distribution,
+        distribution_version,
+        architecture,
+        repository,
+        ppa,
+        suffix,
     )
 
     logger.info(f"Using Package file {packages_file}")
@@ -236,15 +252,12 @@ def get_packages_control_file(
         os.mkdir(fetchy_dir)
 
     if not os.path.isfile(packages_file):
-        if updates:
-            packages_url = f"{mirror}dists/{distribution_version}-updates/main/binary-{architecture}/Packages.gz"
+        if suffix:
+            packages_url = f"{mirror}dists/{distribution_version}-{suffix}/{repository}/binary-{architecture}/Packages.gz"
         else:
-            packages_url = f"{mirror}dists/{distribution_version}/main/binary-{architecture}/Packages.gz"
+            packages_url = f"{mirror}dists/{distribution_version}/{repository}/binary-{architecture}/Packages.gz"
 
-        if updates:
-            packages_file_tar = packages_file + "-updates.gz"
-        else:
-            packages_file_tar = packages_file + ".gz"
+        packages_file_tar = packages_file + ".gz"
 
         logger.warning(f"Packages file does not exist, fetching {packages_url}")
 

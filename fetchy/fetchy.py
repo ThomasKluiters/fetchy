@@ -11,38 +11,40 @@ class Fetchy(object):
         self._repository = None
 
     def build_repository(self):
-        repository = fty.get_packages_control_file(
+        main_repository = fty.get_packages_control_file(
             self.config.distribution,
             self.config.version,
             self.config.architecture,
             self.config.mirror,
+            "main",
         )
 
-        fty.Parser(repository).parse()
+        fty.Parser(main_repository).parse()
 
-        updated_repository = fty.get_packages_control_file(
+        universe_repository = fty.get_packages_control_file(
             self.config.distribution,
             self.config.version,
             self.config.architecture,
             self.config.mirror,
-            updates=True,
+            "universe",
         )
 
-        fty.Parser(updated_repository).parse()
+        fty.Parser(universe_repository).parse()
 
-        repository.merge(updated_repository)
+        main_repository.merge(universe_repository)
 
         for ppa in self.config.ppas:
             ppa_repository = fty.get_packages_control_file(
                 self.config.distribution,
                 self.config.version,
                 self.config.architecture,
+                "main",
                 ppa=ppa,
             )
 
             fty.Parser(ppa_repository).parse()
-            repository.merge(ppa_repository)
-        return repository
+            main_repository.merge(ppa_repository)
+        return main_repository
 
     @property
     def repository(self):
