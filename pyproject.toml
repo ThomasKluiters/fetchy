@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "fetchy"
 version = "0.1.4"
-description = "Downloading packages made easy!"
+description = "Minuscule docker images made trivial!"
 authors = ["thomas <thomas.kluiters@gmail.com>"]
 homepage = "https://github.com/ThomasKluiters/fetchy"
 repository = "https://github.com/ThomasKluiters/fetchy"
