@@ -31,7 +31,7 @@ class Dockerizer(object):
         ENV PATH {path}
         COPY . /
         """
-        
+
         logger.info("Building image")
         with tqdm(
             unit="B",
