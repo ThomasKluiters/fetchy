@@ -19,6 +19,7 @@ class Parser(object):
                 "Pre-Depends",
                 "Filename",
                 "Architecture",
+                "Installed-Size",
             ]
         self.repository = repository
         self.fields = fields

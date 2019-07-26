@@ -122,17 +122,28 @@ class Downloader(object):
             dependencies[_package_name] = package
 
             for dependency in package.dependencies:
-                if (
-                    dependency.name not in dependencies
-                    and dependency.name not in dependencies_to_exclude
-                ):
-                    queue.append(dependency.name)
+                name = self.find_best_candidate(dependency.resolve())
+                if name not in dependencies and name not in dependencies_to_exclude:
+                    queue.append(name)
 
             for pre_dependency in package.pre_dependencies:
-                if (
-                    pre_dependency.name not in dependencies
-                    and pre_dependency.name not in dependencies_to_exclude
-                ):
-                    queue.append(pre_dependency.name)
+                name = self.find_best_candidate(pre_dependency.resolve())
+                if name not in dependencies and name not in dependencies_to_exclude:
+                    queue.append(name)
 
         return dependencies
+
+    def find_best_candidate(self, names):
+        """
+        Find the best dependency to install based on a selection of names.
+
+        Here we optimize for package size.
+        """
+        to_consider = []
+        for name in names:
+            if name in self.packages:
+                to_consider.append(name)
+
+        return sorted(
+            to_consider, key=lambda package: self.packages[package].installed_size
+        )[0]

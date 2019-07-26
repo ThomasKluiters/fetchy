@@ -5,6 +5,8 @@ from .utils import *
 from .version import Version, version_from_string
 from .dependency import (
     Dependency,
+    SimpleDependency,
+    EitherDependency,
     dependency_from_string,
     relationship_from_string,
     dependencies_from_string,
