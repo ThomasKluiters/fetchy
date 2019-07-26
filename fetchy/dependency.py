@@ -22,6 +22,12 @@ def dependency_from_string(kind, string):
     """
     string = string.strip()
 
+    if "|" in string:
+        dependencies = [
+            dependency_from_string(kind, part) for part in string.split("|")
+        ]
+        return EitherDependency(kind, dependencies)
+
     (name, version, condition) = (None, None, None)
 
     version_idx_start = string.find("(")
@@ -147,4 +153,26 @@ class SimpleDependency(Dependency):
         self.condition = condition
 
     def resolve(self):
-        return self
+        return [self.name]
+
+
+class EitherDependency(Dependency):
+    def __init__(self, kind, dependencies):
+        """
+        An EitherDependency contains a sequence of multiple dependencies.
+
+        Each dependency can be used to 
+
+        Parameters
+        ----------
+        kind : string representing if this dependency is either a
+            `Pre-Dependency` or `Dependency`.
+        
+        dependencies : a list of Dependency objects which can be used
+            to satisfy the dependency.
+        """
+        super().__init__(kind)
+        self.dependencies = dependencies
+
+    def resolve(self):
+        return [dependency.name for dependency in self.dependencies]

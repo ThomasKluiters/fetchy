@@ -46,4 +46,7 @@ class Repository(object):
         return not bool(self.pkgs)
 
     def __getitem__(self, key):
-        return self.pkgs[key]
+        return self.pkgs.get(key, None)
+
+    def __contains__(self, key):
+        return key in self.pkgs

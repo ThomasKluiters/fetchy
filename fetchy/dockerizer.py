@@ -27,7 +27,7 @@ class Dockerizer(object):
     def build(self):
         dockerfile = """
         FROM scratch
-        ENV PATH /usr/bin/
+        ENV PATH /usr/bin/:/bin/
         COPY . /
         """
 

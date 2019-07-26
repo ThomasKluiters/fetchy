@@ -1,3 +1,4 @@
+import sys
 from fetchy import version_from_string, dependencies_from_string
 
 
@@ -14,6 +15,7 @@ def package_from_dict(dictionary, origin):
         version_from_string(dictionary["Version"]),
         dictionary["Architecture"],
         origin,
+        int(dictionary.get("Installed-Size", sys.maxsize)),
         dependencies_from_string("Depends", dictionary.get("Depends")),
         dependencies_from_string("Pre-Depends", dictionary.get("Pre-Depends")),
         dictionary.get("Filename"),
@@ -35,6 +37,7 @@ class Package(object):
         version,
         arch,
         origin,
+        installed_size,
         dependencies=[],
         pre_dependencies=[],
         filename=None,
@@ -59,6 +62,7 @@ class Package(object):
         self.origin = origin
         self.dependencies = dependencies
         self.pre_dependencies = pre_dependencies
+        self.installed_size = installed_size
         self._file_name = filename
 
     def download_url(self):
