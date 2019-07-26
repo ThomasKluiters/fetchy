@@ -39,7 +39,7 @@ class Extractor(object):
         """
         Extracts all debian packages given as an argument.
         """
-        binaries = set()
+        binaries = set(["/bin", "/usr/bin"])
 
         with tqdm(
             unit="B",
