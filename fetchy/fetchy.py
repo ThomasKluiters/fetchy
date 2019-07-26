@@ -21,17 +21,18 @@ class Fetchy(object):
 
         fty.Parser(main_repository).parse()
 
-        universe_repository = fty.get_packages_control_file(
-            self.config.distribution,
-            self.config.version,
-            self.config.architecture,
-            self.config.mirror,
-            "universe",
-        )
+        if self.config.distribution == 'ubuntu':
+            universe_repository = fty.get_packages_control_file(
+                self.config.distribution,
+                self.config.version,
+                self.config.architecture,
+                self.config.mirror,
+                "universe",
+            )
 
-        fty.Parser(universe_repository).parse()
+            fty.Parser(universe_repository).parse()
 
-        main_repository.merge(universe_repository)
+            main_repository.merge(universe_repository)
 
         for ppa in self.config.ppas:
             ppa_repository = fty.get_packages_control_file(

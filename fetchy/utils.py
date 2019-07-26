@@ -124,7 +124,7 @@ def get_mirror(distribution=None):
     if distribution is None:
         distribution = get_distribution()
     extension = {"ubuntu": "com", "debian": "org"}[distribution]
-    return f"http://security.{distribution}.{extension}/{distribution}/"
+    return f"http://ftp.{distribution}.{extension}/{distribution}/"
 
 
 def get_ppa_url(ppa, distribution=None):
