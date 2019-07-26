@@ -1,5 +1,6 @@
 from .command import FetchyPackageCommand
 
+
 class DockerizeCommand(FetchyPackageCommand):
     """
     Dockerize packages into a docker image.

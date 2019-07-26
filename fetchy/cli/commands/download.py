@@ -1,5 +1,6 @@
 from .command import FetchyPackageCommand
 
+
 class DownloadCommand(FetchyPackageCommand):
     """
     Download a list of packages.
@@ -17,5 +18,5 @@ class DownloadCommand(FetchyPackageCommand):
         out_dir = "packages"
         if self.option("out"):
             out_dir = self.option("out")
-        
+
         self.fetchy.download_packages(out_dir, packages)
