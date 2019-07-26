@@ -2,7 +2,12 @@ from cleo import Command
 
 from PyInquirer import prompt
 
-from fetchy import is_os_supported, is_version_supported, get_supported_versions_for, config_from_env
+from fetchy import (
+    is_os_supported,
+    is_version_supported,
+    get_supported_versions_for,
+    config_from_env,
+)
 
 
 class FetchyCommandBase(Command):
@@ -32,7 +37,7 @@ class FetchyPackageCommand(FetchyCommandBase):
     def _populate_config(self):
         if self.option("exclude"):
             self.fetchy.config.update("_exclusions", self.option("exclude"))
-        
+
         if self.option("distribution"):
             self.fetchy.config.update("distribution", self.option("distribution"))
 
@@ -47,33 +52,45 @@ class FetchyPackageCommand(FetchyCommandBase):
 
     def _validate_config(self):
         if not is_os_supported(self.fetchy.config.distribution):
-            message = "Sorry, currently we do not support packages indices that are " \
-                "running on your current operating system. Please select an operating system " \
+            message = (
+                "Sorry, currently we do not support packages indices that are "
+                "running on your current operating system. Please select an operating system "
                 "you'd like to use to search packages for:"
-            self.fetchy.config.update("distribution", prompt(
-                [
-                    {
-                        "type": "list",
-                        "message": message,
-                        "name": "distribution",
-                        "choices": ["ubuntu", "debian"],
-                    }
-                ]
-            )["distribution"])
+            )
+            self.fetchy.config.update(
+                "distribution",
+                prompt(
+                    [
+                        {
+                            "type": "list",
+                            "message": message,
+                            "name": "distribution",
+                            "choices": ["ubuntu", "debian"],
+                        }
+                    ]
+                )["distribution"],
+            )
         if not is_version_supported(
             self.fetchy.config.distribution, self.fetchy.config.version
         ):
-            message = f"Sorry, the version {self.fetchy.config.version} is not recognised by fetchy for " \
-                f"the distribution {self.fetchy.config.distribution}. Please select a version for which " \
+            message = (
+                f"Sorry, the version {self.fetchy.config.version} is not recognised by fetchy for "
+                f"the distribution {self.fetchy.config.distribution}. Please select a version for which "
                 "you'd like to search packages for:"
-              
-            self.fetchy.config.update("version", prompt(
-                [
-                    {
-                        "type": "list",
-                        "message": message,
-                        "name": "version",
-                        "choices": get_supported_versions_for(self.fetchy.config.distribution),
-                    }
-                ]
-            )["version"])
+            )
+
+            self.fetchy.config.update(
+                "version",
+                prompt(
+                    [
+                        {
+                            "type": "list",
+                            "message": message,
+                            "name": "version",
+                            "choices": get_supported_versions_for(
+                                self.fetchy.config.distribution
+                            ),
+                        }
+                    ]
+                )["version"],
+            )

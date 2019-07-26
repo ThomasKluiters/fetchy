@@ -1,5 +1,6 @@
 from .command import FetchyPackageCommand
 
+
 class ExtractCommand(FetchyPackageCommand):
     """
     Extract packages files into a directory.
@@ -17,5 +18,5 @@ class ExtractCommand(FetchyPackageCommand):
         out_dir = "extracted-" + "-".join(packages)
         if self.option("out"):
             out_dir = self.option("out")
-        
+
         self.fetchy.extract_packages(out_dir, packages)

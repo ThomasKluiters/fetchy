@@ -22,7 +22,7 @@ _known_versions = {
         "xenial",
         "disco",
         "eoan",
-        "bionic"
+        "bionic",
     ],
     "debian": [
         "buzz",
@@ -41,7 +41,7 @@ _known_versions = {
         "stretch",
         "buster",
         "bullseye",
-        "sid"
+        "sid",
     ],
 }
 

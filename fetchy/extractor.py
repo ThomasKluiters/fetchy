@@ -17,9 +17,11 @@ class Extractor(object):
         Extract a single debian package into the specified root directory.
         """
         package_file = arfile.open(package_path)
-        with package_file.open("data.tar.xz") as tar_ball:
-            with tarfile.open(fileobj=tar_ball) as tar_file:
-                tar_file.extractall(self.root)
+        for info in package_file.infolist():
+            if info.name.decode().startswith("data.tar"):
+                with package_file.open(info.name.decode()) as tar_ball:
+                    with tarfile.open(fileobj=tar_ball) as tar_file:
+                        tar_file.extractall(self.root)
         package_file.close()
 
     def extract_all(self, packages_files):
