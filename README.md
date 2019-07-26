@@ -1,4 +1,4 @@
-# Fetchy - A Python utility to easily build minimal docker images
+# Fetchy - Minuscule images made trivial
   
 ## Why Fetchy?
 
@@ -21,7 +21,7 @@ extract the files of all the packages and wrap them in a Docker image.
 
 ## Does Fetchy have any effect on my system?
 
-No, files will only be downloaded to your current working directory.
+No, files will only be downloaded temporarily.
 
 Furthermore, a folder will be created under ~/.fetchy for caching.
 
