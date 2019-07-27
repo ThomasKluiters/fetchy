@@ -117,6 +117,11 @@ class Downloader(object):
         while queue:
             _package_name = queue.pop()
 
+            if _package_name not in self.packages:
+                logger.error(f"Package {_package_name} was not found.")
+                import sys
+                sys.exit()
+
             package = self.packages[_package_name]
 
             dependencies[_package_name] = package
