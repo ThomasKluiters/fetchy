@@ -1,3 +1,5 @@
+[![Build Status](https://dev.azure.com/thomaskluiters0922/thomaskluiters/_apis/build/status/ThomasKluiters.fetchy?branchName=master)](https://dev.azure.com/thomaskluiters0922/thomaskluiters/_build/latest?definitionId=1&branchName=master)
+
 # Fetchy - Minuscule images made trivial
   
 ## Why Fetchy?
@@ -23,7 +25,8 @@ extract the files of all the packages and wrap them in a Docker image.
 
 No, files will only be downloaded temporarily.
 
-Furthermore, a folder will be created under ~/.fetchy for caching.
+Furthermore, a folder will be created under ~/.cache for caching.
+Or, if specified under `$XDG_CACHE_HOME`.
 
 ## Installing
 
