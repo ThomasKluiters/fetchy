@@ -28,6 +28,6 @@ steps:
   displayName: 'Install dependencies'
 
 - script: |
-    poetry add pytest pytest-azurepipelines
-    pytest
+    poetry add pytest-azurepipelines
+    poetry run pytest
   displayName: 'pytest'
