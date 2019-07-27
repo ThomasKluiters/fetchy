@@ -31,6 +31,7 @@ def test_dependency_name(input, name):
 
     assert result.name == name
 
+
 @pytest.mark.parametrize(
     "input,names",
     [
@@ -41,7 +42,7 @@ def test_dependency_name(input, name):
 )
 def test_dependency_either(input, names):
     result = dependency_from_string("", input)
-    
+
     assert isinstance(result, EitherDependency)
     assert result.dependencies[0].name in names
     assert result.dependencies[1].name in names

@@ -120,6 +120,7 @@ class Downloader(object):
             if _package_name not in self.packages:
                 logger.error(f"Package {_package_name} was not found.")
                 import sys
+
                 sys.exit()
 
             package = self.packages[_package_name]
