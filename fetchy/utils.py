@@ -154,8 +154,10 @@ def get_fetchy_dir():
 
     Here the Packages list is stored.
     """
+    if "XDG_CACHE_HOME" in os.environ:
+        return os.path.join(os.environ["XDG_CACHE_HOME"], "fetchy")
     home = str(Path.home())
-    return os.path.join(home, ".fetchy")
+    return os.path.join(home, ".cache", "fetchy")
 
 
 def get_packages_file_location(
@@ -249,7 +251,7 @@ def get_packages_control_file(
 
     if not os.path.isdir(fetchy_dir):
         logger.warning(f"Fetchy directory does not exist, creating {fetchy_dir}")
-        os.mkdir(fetchy_dir)
+        os.makedirs(fetchy_dir)
 
     if not os.path.isfile(packages_file):
         if suffix:

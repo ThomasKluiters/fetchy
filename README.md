@@ -23,7 +23,8 @@ extract the files of all the packages and wrap them in a Docker image.
 
 No, files will only be downloaded temporarily.
 
-Furthermore, a folder will be created under ~/.fetchy for caching.
+Furthermore, a folder will be created under ~/.cache for caching.
+Or, if specified under `$XDG_CACHE_HOME`.
 
 ## Installing
 
