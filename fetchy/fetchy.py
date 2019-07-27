@@ -39,7 +39,7 @@ class Fetchy(object):
                 self.config.distribution,
                 self.config.version,
                 self.config.architecture,
-                "main",
+                repository="main",
                 ppa=ppa,
             )
 
