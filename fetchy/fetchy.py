@@ -21,7 +21,7 @@ class Fetchy(object):
 
         fty.Parser(main_repository).parse()
 
-        if self.config.distribution == 'ubuntu':
+        if self.config.distribution == "ubuntu":
             universe_repository = fty.get_packages_control_file(
                 self.config.distribution,
                 self.config.version,
