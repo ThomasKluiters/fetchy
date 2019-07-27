@@ -2,7 +2,6 @@ from fetchy import (
     get_architecture,
     get_distribution,
     get_distribution_version,
-    get_mirror,
     gather_exclusions,
 )
 
@@ -17,16 +16,14 @@ class FetchyConfig(object):
     def __init__(
         self,
         distribution=None,
-        version=None,
+        codename=None,
         architecture=None,
-        mirror=None,
         ppas=None,
         exclusions=None,
     ):
         self.distribution = distribution
         self.architecture = architecture
-        self.version = version
-        self._mirror = mirror
+        self.codename = codename
 
         if ppas is None:
             ppas = []
@@ -42,9 +39,6 @@ class FetchyConfig(object):
     def update(self, field, value):
         self.__setattr__(field, value)
 
-    def determine_mirror(self):
-        self._mirror = get_mirror(self.distribution)
-
     def determine_exclusions(self):
         self._determined_exclusions = gather_exclusions(self._exclusions)
 
@@ -53,9 +47,3 @@ class FetchyConfig(object):
         if self._determined_exclusions is None:
             self.determine_exclusions()
         return self._determined_exclusions
-
-    @property
-    def mirror(self):
-        if self._mirror is None:
-            self.determine_mirror()
-        return self._mirror

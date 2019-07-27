@@ -5,11 +5,11 @@ from fetchy import Fetchy, FetchyConfig
 
 
 def get_fetchy():
-    return Fetchy(FetchyConfig("ubuntu", "bionic"))
+    return Fetchy(FetchyConfig("ubuntu", "bionic", "amd64"))
 
 
 def get_fetchy_with_ppa(ppas):
-    return Fetchy(FetchyConfig("ubuntu", "bionic", ppas=ppas))
+    return Fetchy(FetchyConfig("ubuntu", "bionic", "amd64", ppas=ppas))
 
 
 @pytest.mark.smoke

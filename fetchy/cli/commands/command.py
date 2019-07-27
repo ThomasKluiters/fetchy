@@ -42,7 +42,7 @@ class FetchyPackageCommand(FetchyCommandBase):
             self.fetchy.config.update("distribution", self.option("distribution"))
 
         if self.option("codename"):
-            self.fetchy.config.update("version", self.option("codename"))
+            self.fetchy.config.update("codename", self.option("codename"))
 
         if self.option("architecture"):
             self.fetchy.config.update("architecture", self.option("distribution"))
@@ -71,26 +71,26 @@ class FetchyPackageCommand(FetchyCommandBase):
                 )["distribution"],
             )
         if not is_version_supported(
-            self.fetchy.config.distribution, self.fetchy.config.version
+            self.fetchy.config.distribution, self.fetchy.config.codename
         ):
             message = (
-                f"Sorry, the version {self.fetchy.config.version} is not recognised by fetchy for "
-                f"the distribution {self.fetchy.config.distribution}. Please select a version for which "
+                f"Sorry, the codename {self.fetchy.config.codename} is not recognised by fetchy for "
+                f"the distribution {self.fetchy.config.distribution}. Please select a codename for which "
                 "you'd like to search packages for:"
             )
 
             self.fetchy.config.update(
-                "version",
+                "codename",
                 prompt(
                     [
                         {
                             "type": "list",
                             "message": message,
-                            "name": "version",
+                            "name": "codename",
                             "choices": get_supported_versions_for(
                                 self.fetchy.config.distribution
                             ),
                         }
                     ]
-                )["version"],
+                )["codename"],
             )

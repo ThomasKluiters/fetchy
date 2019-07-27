@@ -11,41 +11,28 @@ class Fetchy(object):
         self._repository = None
 
     def build_repository(self):
-        main_repository = fty.get_packages_control_file(
-            self.config.distribution,
-            self.config.version,
-            self.config.architecture,
-            self.config.mirror,
-            "main",
-        )
-
-        fty.Parser(main_repository).parse()
-
+        sources = []
         if self.config.distribution == "ubuntu":
-            universe_repository = fty.get_packages_control_file(
-                self.config.distribution,
-                self.config.version,
-                self.config.architecture,
-                self.config.mirror,
-                "universe",
-            )
-
-            fty.Parser(universe_repository).parse()
-
-            main_repository.merge(universe_repository)
-
+            sources.append(fty.DefaultUbuntuSource(
+                self.config.codename,
+                self.config.architecture
+            ))
+        elif self.config.distribution == "debian":
+            sources.append(fty.DefaultDebianSource(
+                self.config.codename,
+                self.config.architecture
+            ))
         for ppa in self.config.ppas:
-            ppa_repository = fty.get_packages_control_file(
-                self.config.distribution,
-                self.config.version,
-                self.config.architecture,
-                repository="main",
-                ppa=ppa,
-            )
+            sources.append(fty.DefaultPPASource(
+                ppa,
+                self.config.codename,
+                self.config.architecture
+            ))
 
-            fty.Parser(ppa_repository).parse()
-            main_repository.merge(ppa_repository)
-        return main_repository
+        repository = fty.Repository()
+        for source in sources:
+            repository.merge(fty.Parser(source).parse())
+        return repository
 
     @property
     def repository(self):
