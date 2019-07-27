@@ -1,3 +1,5 @@
+[![Build Status](https://dev.azure.com/thomaskluiters0922/thomaskluiters/_apis/build/status/ThomasKluiters.fetchy?branchName=master)](https://dev.azure.com/thomaskluiters0922/thomaskluiters/_build/latest?definitionId=1&branchName=master)
+
 # Fetchy - Minuscule images made trivial
   
 ## Why Fetchy?
