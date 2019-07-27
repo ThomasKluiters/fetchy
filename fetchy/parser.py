@@ -2,14 +2,18 @@ from fetchy import Repository, package_from_dict
 
 
 class Parser(object):
-    def __init__(self, repository, fields=None):
-        """The Control File Parser
-
-        This class is responsible for parsing
-        control files.
+    def __init__(self, source, fields=None):
+        """
+        The Control File Parser will parse package archive
+        index files into a Repository object.
 
         Control files contain the list of dependencies
         one would require to find the desired packages.
+
+        Parameters
+        ----------
+        source : the source this parser will consume, an instance
+            of a Source object
         """
         if fields is None:
             fields = [
@@ -21,33 +25,22 @@ class Parser(object):
                 "Architecture",
                 "Installed-Size",
             ]
-        self.repository = repository
+        self.source = source
         self.fields = fields
 
     def parse(self):
-        """Function that parses all packages
-
-        This function will parse all packages into
-        a `Package` object. Returning a dictionary
-        where each package is stored with its' name
-        as a key.        
-
-        Note that each `Package` object will only
-        be populated with the fields that are
-        supplied to this Parsers' Constructor.
         """
-        if not self.repository.is_empty():
-            return self.repository
-
-        with open(self.repository.packages_file, "r", encoding="utf-8") as fp:
+        Consume the source package indices and add the packages to
+        a repository file.
+        """
+        repository = Repository()
+        with open(self.source.get_index_file(), "r", encoding="utf-8") as fp:
             pkg = {}
             for line in fp:
                 # New packages are introduced with whitespaces
                 if line.startswith("\r\n") or line.startswith("\n"):
                     if pkg:
-                        self.repository.add(
-                            package_from_dict(pkg, self.repository.mirror)
-                        )
+                        repository.add(package_from_dict(pkg, self.source.mirror.url()))
                         pkg = {}
 
                 for field in self.fields:
@@ -55,4 +48,4 @@ class Parser(object):
                         pkg[field] = line.rstrip()[(len(field) + 2) :]
                         break
 
-        return self.repository
+        return repository

@@ -1,13 +1,11 @@
 class Repository(object):
-    def __init__(self, packages_file, mirror, pkgs=None):
+    def __init__(self, pkgs=None):
         """
         A Repository object stores and manages packages
         this way, we can use multiple package indices at once.
         """
         if pkgs is None:
             pkgs = {}
-        self.packages_file = packages_file
-        self.mirror = mirror
         self.pkgs = pkgs
 
     def add(self, pkg):
@@ -24,7 +22,7 @@ class Repository(object):
         packages, then merge this repository with the packages.
         """
         if pkgs:
-            return self.merge(Repository(self.packages_file, self.mirror, pkgs))
+            return self.merge(Repository(pkgs))
         self.pkgs = pkgs
         return self
 

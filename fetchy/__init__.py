@@ -1,6 +1,8 @@
 __version__ = "0.1.6"
 
 from .repository import Repository
+from .mirror import *
+from .source import *
 from .utils import *
 from .version import Version, version_from_string
 from .dependency import (
