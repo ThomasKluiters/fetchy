@@ -13,21 +13,19 @@ class Fetchy(object):
     def build_repository(self):
         sources = []
         if self.config.distribution == "ubuntu":
-            sources.append(fty.DefaultUbuntuSource(
-                self.config.codename,
-                self.config.architecture
-            ))
+            sources.append(
+                fty.DefaultUbuntuSource(self.config.codename, self.config.architecture)
+            )
         elif self.config.distribution == "debian":
-            sources.append(fty.DefaultDebianSource(
-                self.config.codename,
-                self.config.architecture
-            ))
+            sources.append(
+                fty.DefaultDebianSource(self.config.codename, self.config.architecture)
+            )
         for ppa in self.config.ppas:
-            sources.append(fty.DefaultPPASource(
-                ppa,
-                self.config.codename,
-                self.config.architecture
-            ))
+            sources.append(
+                fty.DefaultPPASource(
+                    ppa, self.config.codename, self.config.architecture
+                )
+            )
 
         repository = fty.Repository()
         for source in sources:
@@ -54,8 +52,8 @@ class Fetchy(object):
 
         return fty.Extractor(extract_dir).extract_all(downloaded_packages)
 
-    def dockerize_packages(self, tag, packages_to_dockerize):
+    def dockerize_packages(self, tag, packages_to_dockerize, base):
         temp_extract_dir = tempfile.mkdtemp()
         binaries = self.extract_packages(temp_extract_dir, packages_to_dockerize)
 
-        fty.Dockerizer(tag, temp_extract_dir).build(binaries)
+        return fty.Dockerizer(tag, temp_extract_dir, base).build(binaries)

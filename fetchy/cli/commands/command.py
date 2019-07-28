@@ -74,7 +74,7 @@ class FetchyPackageCommand(FetchyCommandBase):
             self.fetchy.config.distribution, self.fetchy.config.codename
         ):
             message = (
-                f"Sorry, the codename {self.fetchy.config.codename} is not recognised by fetchy for "
+                f"Sorry, the codename '{self.fetchy.config.codename}' is not recognised by fetchy for "
                 f"the distribution {self.fetchy.config.distribution}. Please select a codename for which "
                 "you'd like to search packages for:"
             )

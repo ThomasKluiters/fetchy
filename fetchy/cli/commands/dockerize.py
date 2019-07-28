@@ -8,6 +8,7 @@ class DockerizeCommand(FetchyPackageCommand):
     dockerize
       {packages*        : the list of packages to dockerize}
       {--t|tag=         : If set, the tag to use for the docker images (e.g. `my-image`)}
+      {--b|base=        : If set, the base image to use for the docker image}
     """
 
     def handle(self):
@@ -19,4 +20,10 @@ class DockerizeCommand(FetchyPackageCommand):
         if self.option("tag"):
             tag = self.option("tag")
 
-        self.fetchy.dockerize_packages(tag, packages)
+        base = "scratch"
+        if self.option("base"):
+            base = self.option("base")
+
+        image = self.fetchy.dockerize_packages(tag, packages, base)
+
+        self.line(f"Succesfully built image: `{image}`!")
