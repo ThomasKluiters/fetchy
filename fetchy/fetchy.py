@@ -52,8 +52,8 @@ class Fetchy(object):
 
         return fty.Extractor(extract_dir).extract_all(downloaded_packages)
 
-    def dockerize_packages(self, tag, packages_to_dockerize):
+    def dockerize_packages(self, tag, packages_to_dockerize, base):
         temp_extract_dir = tempfile.mkdtemp()
         binaries = self.extract_packages(temp_extract_dir, packages_to_dockerize)
 
-        return fty.Dockerizer(tag, temp_extract_dir).build(binaries)
+        return fty.Dockerizer(tag, temp_extract_dir, base).build(binaries)
