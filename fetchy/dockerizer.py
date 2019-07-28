@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 
 class Dockerizer(object):
-    def __init__(self, tag, context):
+    def __init__(self, tag, context, base=None):
         """
         The dockerizer will dockerize the downloaded packages into
         a docker image, fully wrapping the packages into a virtualized
@@ -20,14 +20,19 @@ class Dockerizer(object):
         name : the name of the docker image
 
         context : the context in which to build the docker file
+        
+        base : the base image to use, defaults to `scratch`
         """
+        if base is None:
+            base = "scratch"
         self.tag = tag
         self.context = context
+        self.base = base
 
     def build(self, binaries):
         path = ":".join(binaries)
         dockerfile = f"""
-        FROM scratch
+        FROM {self.base}
         ENV PATH {path}
         COPY . /
         """
