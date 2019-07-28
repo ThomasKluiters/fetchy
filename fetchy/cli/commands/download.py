@@ -20,3 +20,5 @@ class DownloadCommand(FetchyPackageCommand):
             out_dir = self.option("out")
 
         self.fetchy.download_packages(out_dir, packages)
+
+        self.line(f"Successfully downloaded packages into `{out_dir}`!")

@@ -33,15 +33,7 @@ class Dockerizer(object):
         """
 
         logger.info("Building image")
-        with tqdm(
-            unit="B",
-            unit_scale=True,
-            unit_divisor=1024,
-            miniters=1,
-            total=3,
-            desc=f"Building image {self.tag}",
-        ) as t:
-
+        with tqdm(total=3, desc=f"Building image {self.tag}") as t:
             with open(f"{self.context}/Dockerfile", "w", encoding="utf-8") as file:
                 file.write(dockerfile)
 
@@ -54,5 +46,4 @@ class Dockerizer(object):
             response = client.images.build(path=self.context, tag=self.tag)
 
             t.update(1)
-
-            logger.info(f"Built image {response}")
+        return self.tag

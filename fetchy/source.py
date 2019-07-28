@@ -4,7 +4,12 @@ import gzip
 import shutil
 import hashlib
 
-from fetchy import PersonalPackageArchiveMirror, DebianMirror, UbuntuMirror, DirectMirror
+from fetchy import (
+    PersonalPackageArchiveMirror,
+    DebianMirror,
+    UbuntuMirror,
+    DirectMirror,
+)
 from pathlib import Path
 from tqdm import tqdm
 
@@ -27,10 +32,14 @@ class Source(object):
         package_index_files = self.collect_package_indices()
         package_file_path = self._get_file_name()
 
-        with tqdm(total=len(package_index_files), desc="Downloading archive indices") as t:
+        with tqdm(
+            total=len(package_index_files), desc="Downloading archive indices"
+        ) as t:
             with open(package_file_path, "wb") as package_file:
                 for package_index_url in package_index_files:
-                    (package_index_file, _) = urllib.request.urlretrieve(package_index_url)
+                    (package_index_file, _) = urllib.request.urlretrieve(
+                        package_index_url
+                    )
                     with gzip.open(package_index_file) as package_index_data:
                         shutil.copyfileobj(package_index_data, package_file)
                         t.update(1)
@@ -101,6 +110,7 @@ class DebianBasedSource(Source):
                 )
         return urls
 
+
 class PersonalPackageArchiveSource(DebianBasedSource):
     def __init__(self, archive, codename, architecture):
         super(PersonalPackageArchiveSource, self).__init__(
@@ -111,28 +121,23 @@ class PersonalPackageArchiveSource(DebianBasedSource):
 class DefaultDebianSource(DebianBasedSource):
     def __init__(self, codename, architecture):
         super(DefaultDebianSource, self).__init__(
-          DebianMirror(),
-          codename,
-          architecture,
-          ["main"],
-          ["updates", "security"]
+            DebianMirror(), codename, architecture, ["main"], ["updates", "security"]
         )
+
 
 class DefaultUbuntuSource(DebianBasedSource):
     def __init__(self, codename, architecture):
         super(DefaultUbuntuSource, self).__init__(
-          UbuntuMirror(),
-          codename,
-          architecture,
-          ["main", "universe"],
-          ["updates", "security"]
+            UbuntuMirror(),
+            codename,
+            architecture,
+            ["main", "universe"],
+            ["updates", "security"],
         )
+
 
 class DefaultPPASource(PersonalPackageArchiveSource):
     def __init__(self, name_or_url, codename, architecture):
         super(DefaultPPASource, self).__init__(
-          PersonalPackageArchiveMirror(name_or_url),
-          codename,
-          architecture
+            PersonalPackageArchiveMirror(name_or_url), codename, architecture
         )
-

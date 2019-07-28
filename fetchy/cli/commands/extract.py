@@ -20,3 +20,5 @@ class ExtractCommand(FetchyPackageCommand):
             out_dir = self.option("out")
 
         self.fetchy.extract_packages(out_dir, packages)
+
+        self.line(f"Successfully extracted package contents into `{out_dir}`!")
