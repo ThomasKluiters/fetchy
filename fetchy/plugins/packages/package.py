@@ -1,5 +1,7 @@
 import sys
-from fetchy import version_from_string, dependencies_from_string
+
+from .version import version_from_string
+from .dependency import dependencies_from_string
 
 
 def package_from_dict(dictionary, origin):

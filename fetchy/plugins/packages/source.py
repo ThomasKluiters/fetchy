@@ -4,12 +4,7 @@ import gzip
 import shutil
 import hashlib
 
-from fetchy import (
-    PersonalPackageArchiveMirror,
-    DebianMirror,
-    UbuntuMirror,
-    DirectMirror,
-)
+from .mirror import PersonalPackageArchiveMirror, UbuntuMirror, DebianMirror
 from pathlib import Path
 from tqdm import tqdm
 

@@ -8,7 +8,6 @@ import logging
 import validators
 
 from tqdm import tqdm
-from fetchy import Repository
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
@@ -44,27 +43,6 @@ _known_versions = {
         "sid",
     ],
 }
-
-
-def gather_exclusions(exclusions):
-    """
-    Gathers a list of dependencies that should be excluded.
-
-    Exclusion values ending with a .txt extension will be
-    parsed as files and will read these files line by line.
-    """
-    dependencies_to_exclude = []
-
-    for exclusion in exclusions:
-        if exclusion.endswith(".txt"):
-            with open(exclusion, "r") as exclusion_file:
-                for exclusion_line in exclusion_file:
-                    dependencies_to_exclude.append(exclusion_line.strip())
-
-        else:
-            dependencies_to_exclude.append(exclusion)
-
-    return dependencies_to_exclude
 
 
 def is_os_supported(distribution=None):

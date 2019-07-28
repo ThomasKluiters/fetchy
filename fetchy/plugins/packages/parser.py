@@ -1,4 +1,5 @@
-from fetchy import Repository, package_from_dict
+from .repository import Repository
+from .package import package_from_dict
 
 
 class Parser(object):

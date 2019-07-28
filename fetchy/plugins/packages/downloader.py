@@ -23,7 +23,9 @@ class Downloader(object):
         self.packages = packages
         self.out_dir = out_dir
 
-    def download_package(self, package_names, dependencies_to_exclude=[], version=None):
+    def download_packages(
+        self, package_names, dependencies_to_exclude=[], version=None
+    ):
         """
         Downloads a package and its' dependencies into a folder.
 

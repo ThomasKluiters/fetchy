@@ -1,4 +1,4 @@
-from fetchy import version_from_string
+from .version import version_from_string
 
 
 def relationship_from_string(string):
