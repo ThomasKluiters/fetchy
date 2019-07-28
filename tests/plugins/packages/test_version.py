@@ -1,6 +1,6 @@
 import pytest
 
-from fetchy import Version, version_from_string
+from fetchy.plugins.packages.version import Version, version_from_string
 
 
 @pytest.mark.parametrize(

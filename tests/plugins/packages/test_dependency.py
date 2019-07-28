@@ -1,6 +1,6 @@
 import pytest
 
-from fetchy import relationship_from_string, dependency_from_string, EitherDependency
+from fetchy.plugins.packages.dependency import relationship_from_string, dependency_from_string, EitherDependency
 
 
 @pytest.mark.parametrize(
