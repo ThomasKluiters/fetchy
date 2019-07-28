@@ -19,4 +19,6 @@ class DockerizeCommand(FetchyPackageCommand):
         if self.option("tag"):
             tag = self.option("tag")
 
-        self.fetchy.dockerize_packages(tag, packages)
+        image = self.fetchy.dockerize_packages(tag, packages)
+
+        self.line(f"Succesfully built image: `{image}`!")
