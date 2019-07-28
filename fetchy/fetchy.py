@@ -1,59 +1,51 @@
-import fetchy as fty
+import yaml
 
-import tempfile
+from .blueprint import BluePrint
+
+from logging import Logger
+
+logger = Logger(__name__)
 
 
 class Fetchy(object):
-    def __init__(self, config=None):
-        if config is None:
-            config = fty.config_from_env()
-        self.config = config
-        self._repository = None
+    def __init__(self):
+        self.plugins = {}
 
-    def build_repository(self):
-        sources = []
-        if self.config.distribution == "ubuntu":
-            sources.append(
-                fty.DefaultUbuntuSource(self.config.codename, self.config.architecture)
-            )
-        elif self.config.distribution == "debian":
-            sources.append(
-                fty.DefaultDebianSource(self.config.codename, self.config.architecture)
-            )
-        for ppa in self.config.ppas:
-            sources.append(
-                fty.DefaultPPASource(
-                    ppa, self.config.codename, self.config.architecture
-                )
-            )
+    def register_plugin(self, hook, plugin):
+        self.plugins[hook] = plugin
 
-        repository = fty.Repository()
-        for source in sources:
-            repository.merge(fty.Parser(source).parse())
-        return repository
+    def blueprint_from_yaml(self, file):
+        return self.blueprint_from_dict(self._load_yaml(file))
 
-    @property
-    def repository(self):
-        if self._repository is None:
-            self._repository = self.build_repository()
-        return self._repository
+    def blueprint_from_dict(self, data):
+        if "tag" not in data:
+            raise ValueError("Tag must be supplied in blueprint.")
+        if "distribution" not in data:
+            raise ValueError("Distribution must be supplied in blueprint.")
+        if "codename" not in data:
+            raise ValueError("Codename must be supplied in blueprint.")
+        if "architecture" not in data:
+            raise ValueError("Architecture must be supplied in blueprint.")
 
-    def download_packages(self, out_dir, packages_to_download):
-        return fty.Downloader(self.repository, out_dir=out_dir).download_package(
-            packages_to_download, self.config.exclusions
+        active_plugins = []
+
+        for (key, value) in data.items():
+            if key in ["distribution", "codename", "architecture", "tag", "base"]:
+                continue
+            if key not in self.plugins:
+                logger.warn(f"The plugin {key} is not recognised and is skipped.")
+                continue
+            active_plugins.append(self.plugins[key](value))
+
+        return BluePrint(
+            data["distribution"],
+            data["codename"],
+            data["architecture"],
+            data["tag"],
+            data.get("base", "scratch"),
+            active_plugins,
         )
 
-    def extract_packages(self, extract_dir, packages_to_extract):
-        temp_download_dir = tempfile.mkdtemp()
-
-        downloaded_packages = self.download_packages(
-            temp_download_dir, packages_to_extract
-        )
-
-        return fty.Extractor(extract_dir).extract_all(downloaded_packages)
-
-    def dockerize_packages(self, tag, packages_to_dockerize, base):
-        temp_extract_dir = tempfile.mkdtemp()
-        binaries = self.extract_packages(temp_extract_dir, packages_to_dockerize)
-
-        return fty.Dockerizer(tag, temp_extract_dir, base).build(binaries)
+    def _load_yaml(self, file):
+        with open(file, "r") as yaml_file:
+            return yaml.safe_load(yaml_file)
