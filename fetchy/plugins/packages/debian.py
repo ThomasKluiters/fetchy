@@ -56,6 +56,7 @@ class DebianFile(object):
 
         scripts = []
         with open(remove_file_script, "w") as remove_script:
+            remove_script.write("#!/bin/sh\n")
             remove_script.write("\n".join([f"rm {file}" for file in self.files]))
             scripts.append(remove_file_script.as_posix())
         if "postrm" in self.control:
