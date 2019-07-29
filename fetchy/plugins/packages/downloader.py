@@ -2,7 +2,9 @@ import os
 import logging
 import urllib.request
 
+from collections import OrderedDict
 from tqdm import tqdm
+from .debian import DebianFile
 
 logger = logging.getLogger(__name__)
 
@@ -54,7 +56,7 @@ class Downloader(object):
 
         logger.info(f"Gathering dependencies for {package_names}")
 
-        downloaded_files = []
+        downloaded_packages = []
 
         for (name, package) in self.gather_dependencies(
             package_names, dependencies_to_exclude
@@ -81,9 +83,9 @@ class Downloader(object):
 
                 urllib.request.urlretrieve(package_url, package_file, hook)
 
-                downloaded_files.append(package_file)
+                downloaded_packages.append(DebianFile(package, package_file))
 
-        return downloaded_files
+        return list(reversed(downloaded_packages))
 
     def gather_dependencies(self, package_names, dependencies_to_exclude):
         """
@@ -114,7 +116,7 @@ class Downloader(object):
 
         queue = package_names
 
-        dependencies = {}
+        dependencies = OrderedDict()
 
         while queue:
             _package_name = queue.pop()

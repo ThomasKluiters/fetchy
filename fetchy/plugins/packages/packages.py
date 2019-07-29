@@ -6,8 +6,10 @@ from fetchy.plugins import BasePlugin
 from .source import DefaultUbuntuSource, DefaultDebianSource, DefaultPPASource
 from .repository import Repository
 from .downloader import Downloader
-from .extractor import Extractor
+
 from .parser import Parser
+
+from pathlib import Path
 
 from logging import Logger
 
@@ -84,16 +86,33 @@ class PackagesPlugin(BasePlugin):
     def _download_and_extract(self, context):
         repository = self._build_repository()
 
-        packages_directory = self._dir_in_context(context)
-
         downloader = Downloader(repository, tempfile.mkdtemp())
-        extractor = Extractor(packages_directory)
+        excluded = self._gather_exclusions()
 
-        extractor.extract_all(
-            downloader.download_packages(self.fetch, self._gather_exclusions())
+        files = downloader.download_packages(self.fetch, excluded)
+
+        for deb_file in files:
+            os.makedirs(
+                os.path.join(
+                    self._dir_in_context(context), "scripts", deb_file.package.name
+                )
+            )
+            deb_file.extract(os.path.join(self._dir_in_context(context), "data"))
+            deb_file.create_install_script(
+                os.path.join(self._dir_in_context(context), "scripts")
+            )
+            if deb_file.package.name in excluded:
+                deb_file.create_remove_scripts(
+                    os.path.join(self._dir_in_context(context), "scripts")
+                )
+
+        context.dockerfile.copy(Path(self._dir_name(), "data").as_posix(), "/")
+        context.dockerfile.copy(
+            Path(self._dir_name(), "scripts").as_posix(), "/scripts"
         )
-
-        context.dockerfile.copy(self._dir_name(), "/")
 
     def build(self, context):
         self._download_and_extract(context)
+
+    def run(self, docker):
+        pass
