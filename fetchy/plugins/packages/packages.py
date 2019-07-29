@@ -91,6 +91,9 @@ class PackagesPlugin(BasePlugin):
 
         files = downloader.download_packages(self.fetch, excluded)
 
+
+        install_script = ["#!/bin/sh"]
+        remove_script = ["#!/bin/sh"]
         for deb_file in files:
             os.makedirs(
                 os.path.join(
@@ -98,13 +101,19 @@ class PackagesPlugin(BasePlugin):
                 )
             )
             deb_file.extract(os.path.join(self._dir_in_context(context), "data"))
-            deb_file.create_install_script(
+            install_script += deb_file.create_install_script(
                 os.path.join(self._dir_in_context(context), "scripts")
             )
             if deb_file.package.name in excluded:
-                deb_file.create_remove_scripts(
+                remove_script += deb_file.create_remove_scripts(
                     os.path.join(self._dir_in_context(context), "scripts")
                 )
+
+        with open(os.path.join(self._dir_in_context(context), "scripts", "install_all.sh"), "w") as install_script_file:
+            install_script_file.write('\n'.join(install_script))
+
+        with open(os.path.join(self._dir_in_context(context), "scripts", "remove_exclusions.sh"), "w") as remove_script_file:
+            remove_script_file.write('\n'.join(remove_script))
 
         context.dockerfile.copy(Path(self._dir_name(), "data").as_posix(), "/")
         context.dockerfile.copy(

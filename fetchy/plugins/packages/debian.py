@@ -48,7 +48,7 @@ class DebianFile(object):
             install_script_file = Path(context, self.package.name, "install.sh")
             with open(install_script_file, "wb") as install_script:
                 install_script.write(self.control["postinst"])
-            scripts.append(install_script_file.as_posix())
+            scripts.append(f"/scripts/{self.package.name}/install.sh")
         return scripts
 
     def create_remove_scripts(self, context):
@@ -58,10 +58,10 @@ class DebianFile(object):
         with open(remove_file_script, "w") as remove_script:
             remove_script.write("#!/bin/sh\n")
             remove_script.write("\n".join([f"rm {file}" for file in self.files]))
-            scripts.append(remove_file_script.as_posix())
+            scripts.append(f"/scripts/{self.package.name}/remove_files.sh")
         if "postrm" in self.control:
             post_remove_file = Path(context, self.package.name, "post_remove.sh")
             with open(post_remove_file, "wb") as post_remove_script:
                 post_remove_script.write(self.control["postrm"])
-            scripts.append(post_remove_file.as_posix())
+            scripts.append(f"/scripts/{self.package.name}/post_remove.sh")
         return scripts
