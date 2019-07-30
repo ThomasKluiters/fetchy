@@ -6,7 +6,7 @@ from fetchy.plugins import BasePlugin
 from .source import DefaultUbuntuSource, DefaultDebianSource, DefaultPPASource
 from .repository import Repository
 from .downloader import Downloader
-
+from .debian import DpkgInstaller
 from .parser import Parser
 
 from pathlib import Path
@@ -86,42 +86,47 @@ class PackagesPlugin(BasePlugin):
     def _download_and_extract(self, context):
         repository = self._build_repository()
 
-        downloader = Downloader(repository, tempfile.mkdtemp())
-        excluded = self._gather_exclusions()
+        installer = DpkgInstaller(Downloader(repository, tempfile.mkdtemp()))
 
-        files = downloader.download_packages(self.fetch, excluded)
-
-
-        install_script = ["#!/bin/sh"]
-        remove_script = ["#!/bin/sh"]
-        for deb_file in files:
-            os.makedirs(
-                os.path.join(
-                    self._dir_in_context(context), "scripts", deb_file.package.name
-                )
-            )
-            deb_file.extract(os.path.join(self._dir_in_context(context), "data"))
-            install_script += deb_file.create_install_script(
-                os.path.join(self._dir_in_context(context), "scripts")
-            )
-            if deb_file.package.name in excluded:
-                remove_script += deb_file.create_remove_scripts(
-                    os.path.join(self._dir_in_context(context), "scripts")
-                )
-
-        with open(os.path.join(self._dir_in_context(context), "scripts", "install_all.sh"), "w") as install_script_file:
-            install_script_file.write('\n'.join(install_script))
-
-        with open(os.path.join(self._dir_in_context(context), "scripts", "remove_exclusions.sh"), "w") as remove_script_file:
-            remove_script_file.write('\n'.join(remove_script))
-
-        context.dockerfile.copy(Path(self._dir_name(), "data").as_posix(), "/")
-        context.dockerfile.copy(
-            Path(self._dir_name(), "scripts").as_posix(), "/scripts"
+        build_pkgs = installer.install(
+            os.path.join(self._dir_in_context(context), "build")
         )
 
+        files = Downloader(
+            repository, os.path.join(self._dir_in_context(context), "deb")
+        ).download_packages(self.fetch, build_pkgs)
+
+        required_pkgs = [file.package.name for file in files]
+
+        install_script = "\n".join(["dpkg --configure -a"] + (
+           list(map(
+                    lambda x: f"dpkg -i --path-exclude=/usr/share/doc/* /deb/{os.path.basename(x.deb_file)}",
+                    files,
+            ))
+        )) + "\n"
+            
+        cleanup_script = installer.cleanup(context, self._gather_exclusions(), required_pkgs)
+
+        os.makedirs(os.path.join(self._dir_in_context(context), "scripts"))
+
+        with open(os.path.join(self._dir_in_context(context), "deb", "install.sh"), "w") as install_script_file:
+            install_script_file.write(install_script)
+        os.chmod(os.path.join(self._dir_in_context(context), "deb", "install.sh"), 0o777)
+        
+        with open(os.path.join(self._dir_in_context(context), "scripts", "clean.sh"), "w") as clean_script_file:
+            clean_script_file.write(cleanup_script)
+        os.chmod(os.path.join(self._dir_in_context(context), "scripts", "clean.sh"), 0o777)
+
+
+        context.dockerfile.copy(Path(self._dir_name(), "build").as_posix(), "/")
+        context.dockerfile.copy(Path(self._dir_name(), "deb").as_posix(), "/deb")
+        context.dockerfile.copy(Path(self._dir_name(), "scripts").as_posix(), "/scripts")
+        context.dockerfile.cmd(["dpkg", "--configure", "dash"])
+        context.dockerfile.run(["/scripts/install.sh"])
+        context.dockerfile.run(["/scripts/clean.sh"])
+    
     def build(self, context):
         self._download_and_extract(context)
 
-    def run(self, docker):
+    def run(self, context):
         pass

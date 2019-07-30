@@ -25,16 +25,13 @@ class PathsPlugin(BasePlugin):
         )
 
     def _explore_path(self, context):
-        paths = set(["/bin/usr/", "/bin/"])
-
-        if self.include is not None:
-            paths.update(set(self.include))
-
-        if self.discover is not None:
-            for directory in self.discover:
-                paths.update(self._explore_directory(directory, context))
+        paths = set(["/usr/bin/", "/bin/", "/sbin/", "/usr/sbin/"])
 
         return ":".join(paths)
 
     def build(self, context):
         context.dockerfile.env("PATH", self._explore_path(context))
+        context.dockerfile.env("DEBIAN_FRONTEND", "noninteractive")
+
+    def run(self, context):
+        pass
