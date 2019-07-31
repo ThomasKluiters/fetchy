@@ -1,4 +1,5 @@
 import os
+import sys
 import tempfile
 
 from fetchy.plugins import BasePlugin
@@ -86,6 +87,11 @@ class PackagesPlugin(BasePlugin):
     def _download_and_extract(self, context):
         repository = self._build_repository()
 
+        for package in self.fetch:
+            if package not in repository:
+                logger.error(f"{package} not found in packages.")
+                sys.exit(1)
+
         installer = DpkgInstaller(Downloader(repository, tempfile.mkdtemp()))
 
         build_pkgs = installer.install(
@@ -98,35 +104,48 @@ class PackagesPlugin(BasePlugin):
 
         required_pkgs = [file.package.name for file in files]
 
-        install_script = "\n".join(["dpkg --configure -a"] + (
-           list(map(
-                    lambda x: f"dpkg -i --path-exclude=/usr/share/doc/* /deb/{os.path.basename(x.deb_file)}",
-                    files,
-            ))
-        )) + "\n"
-            
-        cleanup_script = installer.cleanup(context, self._gather_exclusions(), required_pkgs)
+        install_script = (
+            "\n".join(
+                ["#! /bin/sh"]
+                + ["dpkg -i --force-depends --path-exclude=/usr/share/doc/* /deb/*"]
+            )
+            + "\n"
+        )
+
+        cleanup_script = installer.cleanup(
+            context, self._gather_exclusions(), required_pkgs
+        )
 
         os.makedirs(os.path.join(self._dir_in_context(context), "scripts"))
 
-        with open(os.path.join(self._dir_in_context(context), "deb", "install.sh"), "w") as install_script_file:
+        with open(
+            os.path.join(self._dir_in_context(context), "scripts", "install.sh"), "w"
+        ) as install_script_file:
             install_script_file.write(install_script)
-        os.chmod(os.path.join(self._dir_in_context(context), "deb", "install.sh"), 0o777)
-        
-        with open(os.path.join(self._dir_in_context(context), "scripts", "clean.sh"), "w") as clean_script_file:
+        os.chmod(
+            os.path.join(self._dir_in_context(context), "scripts", "install.sh"), 0o777
+        )
+
+        with open(
+            os.path.join(self._dir_in_context(context), "scripts", "clean.sh"), "w"
+        ) as clean_script_file:
             clean_script_file.write(cleanup_script)
-        os.chmod(os.path.join(self._dir_in_context(context), "scripts", "clean.sh"), 0o777)
+        os.chmod(
+            os.path.join(self._dir_in_context(context), "scripts", "clean.sh"), 0o777
+        )
 
-
+        context.dockerfile.env(
+            "PATH", ":".join(["/usr/bin/", "/bin/", "/sbin/", "/usr/sbin/"])
+        )
+        context.dockerfile.env("DEBIAN_FRONTEND", "noninteractive")
         context.dockerfile.copy(Path(self._dir_name(), "build").as_posix(), "/")
         context.dockerfile.copy(Path(self._dir_name(), "deb").as_posix(), "/deb")
-        context.dockerfile.copy(Path(self._dir_name(), "scripts").as_posix(), "/scripts")
-        context.dockerfile.cmd(["dpkg", "--configure", "dash"])
+        context.dockerfile.copy(
+            Path(self._dir_name(), "scripts").as_posix(), "/scripts"
+        )
+        context.dockerfile.run(["dpkg", "--configure", "-a"])
         context.dockerfile.run(["/scripts/install.sh"])
         context.dockerfile.run(["/scripts/clean.sh"])
-    
+
     def build(self, context):
         self._download_and_extract(context)
-
-    def run(self, context):
-        pass

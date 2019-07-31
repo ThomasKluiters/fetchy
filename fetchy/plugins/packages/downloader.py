@@ -90,7 +90,7 @@ class Downloader(object):
     def gather_dependencies(self, names, excludes):
         visited = []
         items = {}
-        
+
         for name in names:
             self.gather_dependency_tree(name, items, visited, excludes)
         return items
@@ -102,6 +102,9 @@ class Downloader(object):
         visited.append(name)
 
         if name in excludes:
+            return
+
+        if not name:
             return
 
         package = self.packages[name]

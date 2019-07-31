@@ -11,11 +11,15 @@ class DpkgInstaller(object):
     def __init__(self, downloader):
         self.downloader = downloader
         self.build_essential = [
+            "base-passwd",
+            "base-files",
+            "sysv-rc",
             "dpkg",
             "dash",
             "sed",
             "grep",
             "gawk",
+            "bash",
             "coreutils",
             "libc-bin",
             "diffutils",
@@ -53,9 +57,12 @@ class DpkgInstaller(object):
             "grep",
             "readline-common",
             "libsigsegv2",
+            "findutils",
             "tar",
             "gzip",
             "libcre6",
+            "debconf",
+            "perl-base",
             "dpkg dash coreutils",
         ]
 
@@ -63,9 +70,23 @@ class DpkgInstaller(object):
             package for package in excludes if package not in remove_order
         ] + [package for package in remove_order if package not in includes]
 
-        remove_script = "\n".join([] + list(
-            map(lambda x: f"dpkg --purge --force-all {x}", remove_order_filtered)
-        )) + "\n"
+        remove_script = (
+            "\n".join(
+                [
+                    "#! /bin/sh",
+                    "rm -rf /usr/share/locale",
+                    "rm -rf /usr/share/doc",
+                    "rm -rf /usr/share/man",
+                    "rm -rf /deb/",
+                ]
+                + list(
+                    map(
+                        lambda x: f"dpkg --purge --force-all {x}", remove_order_filtered
+                    )
+                )
+            )
+            + "; exit 0\n"
+        )
         return remove_script
 
 
@@ -90,6 +111,9 @@ class DebianFile(object):
                 f"Status: install ok unpacked",
                 f"Architecture: {self.package.arch}",
                 f"Version: {self.package.version}",
+                f"Provides: {', '.join(self.package.provides)}",
+                f"Maintainer: a",
+                f"Description: x",
             ]
             if self.package.dependencies:
                 data.append(

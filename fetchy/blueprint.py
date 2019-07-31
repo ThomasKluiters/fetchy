@@ -18,7 +18,7 @@ class BluePrint(object):
         self.plugins = plugins
 
     def _create_context(self):
-        directory = tempfile.mkdtemp()
+        directory = "context"
         dockerfile = DockerFile(directory, self.base, self.tag)
         return Context(directory, dockerfile)
 
@@ -36,5 +36,6 @@ class BluePrint(object):
             plugin.build(context)
 
         context.dockerfile.build()
+        context.dockerfile.flatten()
 
         return {"tag": self.tag}

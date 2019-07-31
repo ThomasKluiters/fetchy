@@ -6,21 +6,24 @@ class Step(object):
     def __str__(self):
         raise NotImplementedError()
 
+
 class RunStep(object):
     def __init__(self, script):
         self.script = script
 
     def __str__(self):
-        script = ','.join(self.script)
-        return f"RUN [{script}]"  
+        script = ",".join(map(lambda x: f'"{x}"', self.script))
+        return f"RUN [{script}]"
+
 
 class CmdStep(object):
     def __init__(self, script):
         self.script = script
 
     def __str__(self):
-        script = ','.join(self.script)
-        return f"CMD [{script}]"  
+        script = ",".join(self.script)
+        return f"CMD [{script}]"
+
 
 class FromStep(object):
     def __init__(self, image):
@@ -58,7 +61,6 @@ class DockerFile(object):
         self.from_image(base)
         self.client = docker.DockerClient()
 
-
     def step(self, step):
         self.steps.append(step)
         return self
@@ -73,10 +75,9 @@ class DockerFile(object):
         return self.step(EnvStep(name, value))
 
     def create(self):
-        print("\n".join(map(str, self.steps)))
         with open(os.path.join(self.path, "Dockerfile"), "w", encoding="utf-8") as file:
             file.write("\n".join(map(str, self.steps)))
-    
+
     def cmd(self, script):
         return self.step(CmdStep(script))
 
@@ -86,13 +87,13 @@ class DockerFile(object):
     def build(self):
         self.create()
 
-        self.client.images.build(path=self.path, tag=self.tag)
+        self.client.images.build(path=self.path, tag=f"{self.tag}-builder")
 
-    def create_container(self):
-        self.container = self.client.api.create_container(self.tag, command='/bin/sh', stdin_open=True)
-        self.socket = self.client.api.attach_socket(self.container, params={'stdin': 1, 'stream': 1, 'stdout': 1})
-
-    def finalize(self):
-        container_id = self.container['Id']
-        self.client.api.stop(container_id)
-        self.client.api.export(container_id)
+    def flatten(self):
+        self.container = self.client.api.create_container(
+            f"{self.tag}-builder", command="null", stdin_open=True
+        )
+        self.stream = self.client.api.export(self.container["Id"])
+        self.client.api.import_image_from_stream(
+            self.stream, repository=self.tag, tag="latest"
+        )
