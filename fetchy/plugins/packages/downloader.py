@@ -106,7 +106,7 @@ class Downloader(object):
 
         if not name:
             return
-        
+
         if name not in self.packages:
             return
 
@@ -142,7 +142,6 @@ class Downloader(object):
                 to_consider.append(name)
 
         if not to_consider:
-            print(names)
             return None
 
         return sorted(

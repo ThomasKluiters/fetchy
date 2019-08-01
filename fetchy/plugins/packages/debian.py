@@ -47,6 +47,7 @@ class DpkgInstaller(object):
 
         return [file.package.name for file in self.files]
 
+
 class DebianFile(object):
     def __init__(self, package, deb_file):
         self.package = package
@@ -121,56 +122,3 @@ class DebianFile(object):
                     with tarfile.open(fileobj=content_archive) as data_archive:
                         self._unpack_data(context, data_archive)
         self._append_to_status(context)
-
-    @property
-    def data(self):
-        return self.extract_from_file("data")
-
-    @property
-    def files(self):
-        tar_file = tarfile.open(fileobj=self.data)
-        return [info.name for info in tar_file.getmembers() if info.isfile()]
-
-    @property
-    def control(self):
-        scripts = {}
-        with tarfile.open(fileobj=self.extract_from_file("control")) as tar_file:
-            for member in tar_file.getmembers():
-                if member.isfile():
-                    scripts[member.name.lstrip("./")] = tar_file.extractfile(
-                        member
-                    ).read()
-        return scripts
-
-    def extract(self, context):
-        with tarfile.open(fileobj=self.data) as tar_file:
-            tar_file.extractall(context)
-
-    def create_install_script(self, context):
-        scripts = []
-        if "preinst" in self.control:
-            install_script_file = Path(context, self.package.name, "preinstall.sh")
-            with open(install_script_file, "wb") as install_script:
-                install_script.write(self.control["preinst"])
-            scripts.append(f"/scripts/{self.package.name}/preinstall.sh")
-        if "postinst" in self.control:
-            install_script_file = Path(context, self.package.name, "install.sh")
-            with open(install_script_file, "wb") as install_script:
-                install_script.write(self.control["postinst"])
-            scripts.append(f"/scripts/{self.package.name}/install.sh configure")
-        return scripts
-
-    def create_remove_scripts(self, context):
-        remove_file_script = Path(context, self.package.name, "remove_files.sh")
-
-        scripts = []
-        with open(remove_file_script, "w") as remove_script:
-            remove_script.write("#!/bin/sh\n")
-            remove_script.write("\n".join([f"rm {file}" for file in self.files]))
-            scripts.append(f"/scripts/{self.package.name}/remove_files.sh")
-        if "postrm" in self.control:
-            post_remove_file = Path(context, self.package.name, "post_remove.sh")
-            with open(post_remove_file, "wb") as post_remove_script:
-                post_remove_script.write(self.control["postrm"])
-            scripts.append(f"/scripts/{self.package.name}/post_remove.sh")
-        return scripts

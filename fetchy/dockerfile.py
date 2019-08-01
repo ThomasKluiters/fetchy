@@ -89,4 +89,3 @@ class DockerFile(object):
 
         (img, _) = self.client.images.build(path=self.path)
         return img.short_id
-

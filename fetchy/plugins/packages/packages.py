@@ -102,39 +102,14 @@ class PackagesPlugin(BasePlugin):
             repository, os.path.join(self._dir_in_context(context), "deb")
         ).download_packages(self.fetch)
 
-        required_pkgs = [file.package.name for file in files]
-
-        install_script = (
-            "\n".join(
-                ["#! /bin/sh"]
-                + ["dpkg -i --force-depends --path-exclude=/usr/share/doc/* /deb/*"]
-            )
-            + "\n"
-        )
-
-        os.makedirs(os.path.join(self._dir_in_context(context), "scripts"))
-
-        with open(
-            os.path.join(self._dir_in_context(context), "scripts", "install.sh"), "w"
-        ) as install_script_file:
-            install_script_file.write(install_script)
-        os.chmod(
-            os.path.join(self._dir_in_context(context), "scripts", "install.sh"), 0o777
-        )
-
-
         context.dockerfile.env(
             "PATH", ":".join(["/usr/bin/", "/bin/", "/sbin/", "/usr/sbin/"])
         )
         context.dockerfile.env("DEBIAN_FRONTEND", "noninteractive")
         context.dockerfile.copy(Path(self._dir_name(), "build").as_posix(), "/")
         context.dockerfile.copy(Path(self._dir_name(), "deb").as_posix(), "/deb")
-        context.dockerfile.copy(
-            Path(self._dir_name(), "scripts").as_posix(), "/scripts"
-        )
         context.dockerfile.run(["dpkg", "--configure", "-a"])
-        context.dockerfile.run(["/scripts/install.sh"])
-
+        context.dockerfile.run(["dpkg", "-i", "--force-depends", "-R", "/deb"])
 
     def build(self, context):
         self._download_and_extract(context)
