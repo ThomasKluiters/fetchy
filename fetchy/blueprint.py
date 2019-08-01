@@ -2,6 +2,7 @@ import tempfile
 
 from .context import Context
 from .dockerfile import DockerFile
+from .dfs import DockerFileSystem
 
 from logging import Logger
 
@@ -18,7 +19,7 @@ class BluePrint(object):
         self.plugins = plugins
 
     def _create_context(self):
-        directory = "context"
+        directory = tempfile.mkdtemp()
         dockerfile = DockerFile(directory, self.base, self.tag)
         return Context(directory, dockerfile)
 
@@ -35,6 +36,8 @@ class BluePrint(object):
                 plugin.build(context)
 
             context.dockerfile.build()
-            context.dockerfile.flatten()
+
+            dfs = DockerFileSystem(self.tag, context.dockerfile.client)
+            dfs.build_minimal_image()
 
             return {"tag": self.tag}

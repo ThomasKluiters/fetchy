@@ -112,10 +112,6 @@ class PackagesPlugin(BasePlugin):
             + "\n"
         )
 
-        cleanup_script = installer.cleanup(
-            context, self._gather_exclusions(), required_pkgs
-        )
-
         os.makedirs(os.path.join(self._dir_in_context(context), "scripts"))
 
         with open(

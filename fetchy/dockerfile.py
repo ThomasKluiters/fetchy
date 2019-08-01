@@ -87,13 +87,5 @@ class DockerFile(object):
     def build(self):
         self.create()
 
-        self.client.images.build(path=self.path, tag=f"{self.tag}-builder")
+        self.client.images.build(path=self.path, tag=self.tag)
 
-    def flatten(self):
-        self.container = self.client.api.create_container(
-            f"{self.tag}-builder", command="null", stdin_open=True
-        )
-        self.stream = self.client.api.export(self.container["Id"])
-        self.client.api.import_image_from_stream(
-            self.stream, repository=self.tag, tag="latest"
-        )
