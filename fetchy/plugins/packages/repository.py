@@ -13,6 +13,9 @@ class Repository(object):
         Add a single package to this Repository, if it already
         exists, then overwrite it.
         """
+        if pkg.name in self.pkgs:
+            if pkg.version.upstream_version < self.pkgs[pkg.name].version.upstream_version:
+                return
         self.pkgs[pkg.name] = pkg
 
     def update(self, pkgs):

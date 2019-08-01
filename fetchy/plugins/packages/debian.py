@@ -47,62 +47,6 @@ class DpkgInstaller(object):
 
         return [file.package.name for file in self.files]
 
-    def cleanup(self, context, excludes, includes):
-        remove_order = [
-            "hostname",
-            "install-info",
-            "libc-bin",
-            "diffutils",
-            "debianutils",
-            "sysvinit-utils",
-            "sed",
-            "libgmp10",
-            "libmpfr6",
-            "grep",
-            "readline-common",
-            "libsigsegv2",
-            "findutils",
-            "tar",
-            "gzip",
-            "libcre6",
-            "debconf",
-            "perl-base",
-            "dpkg dash coreutils",
-        ]
-
-        to_remove = [
-            file.package.name 
-            for file in self.files 
-            if (file.package.name not in remove_order and file.package.name not in includes)
-        ] + remove_order
-
-        remove_order_filtered = [
-            package for package in excludes if package not in to_remove
-        ] + [package for package in to_remove if package not in includes]
-
-        print(to_remove)
-
-        remove_script = (
-            "\n".join(
-                [
-                    "#! /bin/sh",
-                    "rm -rf /usr/share/i18n",
-                    "rm -rf /usr/share/locale",
-                    "rm -rf /usr/share/doc",
-                    "rm -rf /usr/share/man",
-                    "rm -rf /deb/",
-                ]
-                + list(
-                    map(
-                        lambda x: f"dpkg --purge --force-all {x}", remove_order_filtered
-                    )
-                )
-            )
-            + "; exit 0\n"
-        )
-        return remove_script
-
-
 class DebianFile(object):
     def __init__(self, package, deb_file):
         self.package = package

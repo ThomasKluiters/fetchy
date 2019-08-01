@@ -126,13 +126,6 @@ class PackagesPlugin(BasePlugin):
             os.path.join(self._dir_in_context(context), "scripts", "install.sh"), 0o777
         )
 
-        with open(
-            os.path.join(self._dir_in_context(context), "scripts", "clean.sh"), "w"
-        ) as clean_script_file:
-            clean_script_file.write(cleanup_script)
-        os.chmod(
-            os.path.join(self._dir_in_context(context), "scripts", "clean.sh"), 0o777
-        )
 
         context.dockerfile.env(
             "PATH", ":".join(["/usr/bin/", "/bin/", "/sbin/", "/usr/sbin/"])
@@ -145,7 +138,7 @@ class PackagesPlugin(BasePlugin):
         )
         context.dockerfile.run(["dpkg", "--configure", "-a"])
         context.dockerfile.run(["/scripts/install.sh"])
-        context.dockerfile.run(["/scripts/clean.sh"])
+
 
     def build(self, context):
         self._download_and_extract(context)
