@@ -13,6 +13,8 @@ class DpkgInstaller(object):
         self.build_essential = [
             "base-passwd",
             "base-files",
+            "hostname",
+            "passwd",
             "sysv-rc",
             "dpkg",
             "dash",
@@ -25,6 +27,7 @@ class DpkgInstaller(object):
             "diffutils",
             "findutils",
             "sysvinit-utils",
+            "libpam-runtime",
             "gzip",
         ]
 
@@ -46,6 +49,7 @@ class DpkgInstaller(object):
 
     def cleanup(self, context, excludes, includes):
         remove_order = [
+            "hostname",
             "install-info",
             "libc-bin",
             "diffutils",
@@ -66,14 +70,23 @@ class DpkgInstaller(object):
             "dpkg dash coreutils",
         ]
 
+        to_remove = [
+            file.package.name 
+            for file in self.files 
+            if (file.package.name not in remove_order and file.package.name not in includes)
+        ] + remove_order
+
         remove_order_filtered = [
-            package for package in excludes if package not in remove_order
-        ] + [package for package in remove_order if package not in includes]
+            package for package in excludes if package not in to_remove
+        ] + [package for package in to_remove if package not in includes]
+
+        print(to_remove)
 
         remove_script = (
             "\n".join(
                 [
                     "#! /bin/sh",
+                    "rm -rf /usr/share/i18n",
                     "rm -rf /usr/share/locale",
                     "rm -rf /usr/share/doc",
                     "rm -rf /usr/share/man",
@@ -106,9 +119,12 @@ class DebianFile(object):
     def _append_to_status(self, context):
         dpkg_status_file = os.path.join(context, "var", "lib", "dpkg", "status")
         with open(dpkg_status_file, "a") as status_file:
+            status = "install ok unpacked"
+            if self.package.name == "dash":
+                status = "install ok installed"
             data = [
                 f"Package: {self.package.name}",
-                f"Status: install ok unpacked",
+                f"Status: {status}",
                 f"Architecture: {self.package.arch}",
                 f"Version: {self.package.version}",
                 f"Provides: {', '.join(self.package.provides)}",

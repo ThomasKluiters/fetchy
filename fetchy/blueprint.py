@@ -30,12 +30,11 @@ class BluePrint(object):
                 logger.error(f"{plugin.name} failed validation phase.")
                 return
 
-        context = self._create_context()
+        with self._create_context() as context:
+            for plugin in self.plugins:
+                plugin.build(context)
 
-        for plugin in self.plugins:
-            plugin.build(context)
+            context.dockerfile.build()
+            context.dockerfile.flatten()
 
-        context.dockerfile.build()
-        context.dockerfile.flatten()
-
-        return {"tag": self.tag}
+            return {"tag": self.tag}

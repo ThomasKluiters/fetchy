@@ -100,7 +100,7 @@ class PackagesPlugin(BasePlugin):
 
         files = Downloader(
             repository, os.path.join(self._dir_in_context(context), "deb")
-        ).download_packages(self.fetch, build_pkgs)
+        ).download_packages(self.fetch)
 
         required_pkgs = [file.package.name for file in files]
 
