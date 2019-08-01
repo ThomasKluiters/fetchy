@@ -15,7 +15,7 @@ class BasePlugin(object):
         return self.hook
 
     def _dir_in_context(self, context):
-        return os.path.join(context.directory, "packages")
+        return os.path.join(context.directory, self._dir_name())
 
     def validate(self):
         """

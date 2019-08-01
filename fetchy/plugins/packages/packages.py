@@ -1,4 +1,5 @@
 import os
+import sys
 import tempfile
 
 from fetchy.plugins import BasePlugin
@@ -6,8 +7,10 @@ from fetchy.plugins import BasePlugin
 from .source import DefaultUbuntuSource, DefaultDebianSource, DefaultPPASource
 from .repository import Repository
 from .downloader import Downloader
-from .extractor import Extractor
+from .debian import DpkgInstaller
 from .parser import Parser
+
+from pathlib import Path
 
 from logging import Logger
 
@@ -84,16 +87,29 @@ class PackagesPlugin(BasePlugin):
     def _download_and_extract(self, context):
         repository = self._build_repository()
 
-        packages_directory = self._dir_in_context(context)
+        for package in self.fetch:
+            if package not in repository:
+                logger.error(f"{package} not found in packages.")
+                sys.exit(1)
 
-        downloader = Downloader(repository, tempfile.mkdtemp())
-        extractor = Extractor(packages_directory)
+        installer = DpkgInstaller(Downloader(repository, tempfile.mkdtemp()))
 
-        extractor.extract_all(
-            downloader.download_packages(self.fetch, self._gather_exclusions())
+        build_pkgs = installer.install(
+            os.path.join(self._dir_in_context(context), "build")
         )
 
-        context.dockerfile.copy(self._dir_name(), "/")
+        files = Downloader(
+            repository, os.path.join(self._dir_in_context(context), "deb")
+        ).download_packages(self.fetch)
+
+        context.dockerfile.env(
+            "PATH", ":".join(["/usr/bin/", "/bin/", "/sbin/", "/usr/sbin/"])
+        )
+        context.dockerfile.env("DEBIAN_FRONTEND", "noninteractive")
+        context.dockerfile.copy(Path(self._dir_name(), "build").as_posix(), "/")
+        context.dockerfile.copy(Path(self._dir_name(), "deb").as_posix(), "/deb")
+        context.dockerfile.run(["dpkg", "--configure", "-a"])
+        context.dockerfile.run(["dpkg", "-i", "--force-depends", "-R", "/deb"])
 
     def build(self, context):
         self._download_and_extract(context)

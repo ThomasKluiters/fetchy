@@ -25,6 +25,7 @@ class Parser(object):
                 "Filename",
                 "Architecture",
                 "Installed-Size",
+                "Provides",
             ]
         self.source = source
         self.fields = fields

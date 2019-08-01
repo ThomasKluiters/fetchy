@@ -50,7 +50,6 @@ class DockerizeCommand(FetchyCommandBase):
                 "exclude": options["exclude"],
                 "ppa": options["ppa"],
             },
-            "paths": {"discover": ["packages"]},
         }
 
         self._validate_configuration(configuration)

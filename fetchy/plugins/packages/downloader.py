@@ -2,7 +2,9 @@ import os
 import logging
 import urllib.request
 
+from collections import OrderedDict
 from tqdm import tqdm
+from .debian import DebianFile
 
 logger = logging.getLogger(__name__)
 
@@ -54,7 +56,7 @@ class Downloader(object):
 
         logger.info(f"Gathering dependencies for {package_names}")
 
-        downloaded_files = []
+        downloaded_packages = []
 
         for (name, package) in self.gather_dependencies(
             package_names, dependencies_to_exclude
@@ -81,73 +83,52 @@ class Downloader(object):
 
                 urllib.request.urlretrieve(package_url, package_file, hook)
 
-                downloaded_files.append(package_file)
+                downloaded_packages.append(DebianFile(package, package_file))
 
-        return downloaded_files
+        return downloaded_packages
 
-    def gather_dependencies(self, package_names, dependencies_to_exclude):
-        """
-        Gather dependencies for a package.
+    def gather_dependencies(self, names, excludes):
+        visited = []
+        items = {}
 
-        This function will naaively gather dependencies for the given package name.
+        for name in names:
+            self.gather_dependency_tree(name, items, visited, excludes)
+        return items
 
-        This will only gather Depends and Pre-Depends dependencies and thus only gather
-        the dependencies that are required in order to make the given package run.
+    def gather_dependency_tree(self, name, to_install, visited, excludes):
+        if name in visited:
+            return
 
-        Parameters
-        ----------
-        package_name : string representing the name of the package
-            dependencies should be gathereed for.
+        visited.append(name)
 
-        dependencies_to_exclude : list of strings of names of dependencies
-            that should be excluded from the packages to download.
-            
-        Returns
-        -------
-        dict
-            A dictionary containing all the dependencies required for
-            the given package. Each dependency is stored as a Package
-            object and uses the package name as key.
-        """
-        if isinstance(package_names, str):
-            package_names = [package_names]
+        if name in excludes:
+            return
 
-        queue = package_names
+        if not name:
+            return
 
-        dependencies = {}
+        if name not in self.packages:
+            return
 
-        while queue:
-            _package_name = queue.pop()
+        package = self.packages[name]
 
-            if _package_name not in self.packages:
-                logger.error(f"Package {_package_name} was not found.")
-                import sys
+        for pre_dependency in package.pre_dependencies:
+            self.gather_dependency_tree(
+                self.find_best_candidate(pre_dependency.resolve()),
+                to_install,
+                visited,
+                excludes,
+            )
 
-                sys.exit()
+        for dependency in package.dependencies:
+            self.gather_dependency_tree(
+                self.find_best_candidate(dependency.resolve()),
+                to_install,
+                visited,
+                excludes,
+            )
 
-            package = self.packages[_package_name]
-
-            dependencies[_package_name] = package
-
-            for dependency in package.dependencies:
-                name = self.find_best_candidate(dependency.resolve())
-                if (
-                    name
-                    and name not in dependencies
-                    and name not in dependencies_to_exclude
-                ):
-                    queue.append(name)
-
-            for pre_dependency in package.pre_dependencies:
-                name = self.find_best_candidate(pre_dependency.resolve())
-                if (
-                    name
-                    and name not in dependencies
-                    and name not in dependencies_to_exclude
-                ):
-                    queue.append(name)
-
-        return dependencies
+        to_install[name] = package
 
     def find_best_candidate(self, names):
         """

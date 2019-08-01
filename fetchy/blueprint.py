@@ -2,6 +2,7 @@ import tempfile
 
 from .context import Context
 from .dockerfile import DockerFile
+from .dfs import DockerFileSystem
 
 from logging import Logger
 
@@ -30,11 +31,18 @@ class BluePrint(object):
                 logger.error(f"{plugin.name} failed validation phase.")
                 return
 
-        context = self._create_context()
+        with self._create_context() as context:
+            for plugin in self.plugins:
+                plugin.build(context)
 
-        for plugin in self.plugins:
-            plugin.build(context)
+            print("Installing dependencies, this might take a while...")
+            id = context.dockerfile.build()
 
-        context.dockerfile.build()
+            print("Done! Slimming down image...")
+            dfs = DockerFileSystem(id, self.tag, context.dockerfile.client)
+            dfs.build_minimal_image()
 
-        return {"tag": self.tag}
+            print("Cleaning up...")
+            context.dockerfile.client.images.remove(id)
+
+            return {"tag": self.tag}

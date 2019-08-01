@@ -88,6 +88,9 @@ class DependencyRelationship(object):
         self.relationship = relationship
         self.version = version
 
+    def __str__(self):
+        return f"({self.relationship} {self.version})"
+
 
 class Dependency(object):
     def __init__(self, kind):
@@ -155,6 +158,11 @@ class SimpleDependency(Dependency):
     def resolve(self):
         return [self.name]
 
+    def __str__(self):
+        if self.relationship:
+            return f"{self.name} {self.relationship}"
+        return self.name
+
 
 class EitherDependency(Dependency):
     def __init__(self, kind, dependencies):
@@ -176,3 +184,6 @@ class EitherDependency(Dependency):
 
     def resolve(self):
         return [dependency.name for dependency in self.dependencies]
+
+    def __str__(self):
+        return " | ".join(map(str, self.dependencies))
