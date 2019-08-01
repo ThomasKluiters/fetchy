@@ -87,5 +87,6 @@ class DockerFile(object):
     def build(self):
         self.create()
 
-        self.client.images.build(path=self.path, tag=self.tag)
+        (img, _) = self.client.images.build(path=self.path)
+        return img.short_id
 

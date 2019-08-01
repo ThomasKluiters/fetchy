@@ -3,16 +3,18 @@ import json
 import tarfile
 import docker
 import shutil
+from pathlib import Path
 
 from tempfile import TemporaryDirectory
 
 class DockerFileSystem(object):
-    def __init__(self, image, client : docker.DockerClient):
+    def __init__(self, from_image, image, client : docker.DockerClient):
+        self.from_image = from_image
         self.image = image
         self.client = client
 
     def _extract_image_in(self, directory):
-        image = self.client.api.get_image(self.image)
+        image = self.client.api.get_image(self.from_image)
 
         tar_file = os.path.join(directory, "image.tar")
 
@@ -74,20 +76,33 @@ class DockerFileSystem(object):
 
         self._remove_doc_files(directory, layer)
         self._remove_docker_files(directory, layer)
-        
+
         layer_directory = os.path.join(directory, layer)
 
         with tarfile.open(os.path.join(directory, "image.tar"), "w:gz") as tar:
             for root, dirs, files in os.walk(layer_directory):
                 for file in [os.path.join(root, file) for file in files if ".wh." not in file]:
                     name = os.path.relpath(file, layer_directory)
-                    if os.path.islink(file) and not os.path.exists(file):
-                        missing = os.path.realpath(file)                        
-                        resolved = self._find_file(directory, os.path.relpath(missing, layer_directory))
-                        
-                        shutil.copyfile(resolved, missing)
+                    if os.path.islink(file):
 
-                        tar.add(resolved, arcname=os.path.relpath(missing, layer_directory))
+                        if os.readlink(file).startswith('/'): # symlink was picked up by our system..
+                            missing = os.readlink(file).lstrip("/")
+                        else:
+                            if os.path.basename(os.readlink(file)) == os.readlink(file):
+                                missing = os.path.relpath(os.path.join(root, os.readlink(file)), layer_directory)
+                            else:
+                                missing = os.path.relpath(os.path.join(os.path.dirname(file), os.readlink(file)), layer_directory)
+                        
+                        
+                        resolved = self._find_file(directory, missing)
+
+                        target = os.path.join(layer_directory, missing)
+                        
+                        if not os.path.isfile(target):
+                            if Path(target).resolve() != Path(resolved).resolve():
+                                shutil.copyfile(resolved, target)
+
+                            tar.add(resolved, arcname=missing)
                     tar.add(file, arcname=name)
         
         self.client.api.import_image(os.path.join(directory, "image.tar"), repository=self.image)

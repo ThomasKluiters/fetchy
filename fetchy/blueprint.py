@@ -35,9 +35,9 @@ class BluePrint(object):
             for plugin in self.plugins:
                 plugin.build(context)
 
-            context.dockerfile.build()
+            id = context.dockerfile.build()
 
-            dfs = DockerFileSystem(self.tag, context.dockerfile.client)
+            dfs = DockerFileSystem(id, self.tag, context.dockerfile.client)
             dfs.build_minimal_image()
 
             return {"tag": self.tag}
