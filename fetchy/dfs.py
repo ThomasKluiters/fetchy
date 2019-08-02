@@ -49,7 +49,7 @@ class DockerFileSystem(object):
         for layer in reversed(self.layers):
             path_in_layer = os.path.join(directory, layer, path)
             if os.path.isfile(path_in_layer):
-                return path_in_layer
+                return (layer, path_in_layer)
 
     def _remove_docker_files(self, directory, layer):
         layer_directory = os.path.join(directory, layer)
@@ -83,7 +83,7 @@ class DockerFileSystem(object):
 
         layer_directory = os.path.join(directory, layer)
 
-        with tarfile.open(os.path.join(directory, "image.tar"), "w:gz") as tar:
+        with tarfile.open(os.path.join("./", "image.tar"), "w:gz") as tar:
             with tqdm(
                 total=sum([len(files) for (_, _, files) in os.walk(layer_directory)]),
                 desc="Verifying image...",
@@ -120,13 +120,13 @@ class DockerFileSystem(object):
                                         layer_directory,
                                     )
 
-                            resolved = self._find_file(directory, missing)
+                            (resolved_layer, resolved) = self._find_file(directory, missing)
 
                             if not resolved:
                                 logger.warn(
                                     f"Missing {missing}, you may want to include this file."
                                 )
-                            else:
+                            elif resolved_layer != layer:
                                 target = os.path.join(layer_directory, missing)
 
                                 if not os.path.isfile(target):
@@ -137,11 +137,12 @@ class DockerFileSystem(object):
                                         shutil.copyfile(resolved, target)
 
                                     tar.add(resolved, arcname=missing)
-                        tar.add(file, arcname=name)
+                        if name not in tar.getnames():
+                            tar.add(file, arcname=name)
                         t.update(1)
 
         self.client.api.import_image(
-            os.path.join(directory, "image.tar"), repository=self.image
+            os.path.join("./", "image.tar"), repository=self.image
         )
 
     def build_minimal_image(self):
