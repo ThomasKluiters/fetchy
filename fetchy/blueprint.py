@@ -43,6 +43,6 @@ class BluePrint(object):
             dfs.build_minimal_image()
 
             print("Cleaning up...")
-            context.dockerfile.client.images.remove(id)
+            # context.dockerfile.client.images.remove(id)
 
             return {"tag": self.tag}

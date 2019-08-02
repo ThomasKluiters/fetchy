@@ -7,6 +7,9 @@ import logging
 
 from pathlib import Path
 from tqdm import tqdm
+from elftools.elf.elffile import ELFFile
+from elftools.elf.dynamic import DynamicSection
+
 from tempfile import TemporaryDirectory
 
 logger = logging.getLogger(__name__)
@@ -50,6 +53,18 @@ class DockerFileSystem(object):
             path_in_layer = os.path.join(directory, layer, path)
             if os.path.isfile(path_in_layer):
                 return (layer, path_in_layer)
+        return (None, None)
+
+    def _find_library(self, directory, library):
+        for layer in reversed(self.layers):
+            path_in_layer = os.path.join(directory, layer)
+            for root, _, files in os.walk(path_in_layer):
+                for file in files:
+                    if library in file:
+                        full_path = os.path.join(root, file)
+                        rel_path = os.path.relpath(full_path, path_in_layer)
+                        return (layer, rel_path, full_path)
+        return (None, None, None)
 
     def _remove_docker_files(self, directory, layer):
         layer_directory = os.path.join(directory, layer)
@@ -66,7 +81,7 @@ class DockerFileSystem(object):
             for directry_to_remove in [
                 ["usr", "share", "doc"],
                 ["usr", "share", "locale"],
-                ["usr", "share", "doc"],
+                ["usr", "share", "man"],
                 ["var", "lib", "dpkg"],
                 ["var", "cache"],
             ]:
@@ -74,6 +89,28 @@ class DockerFileSystem(object):
                 if os.path.isdir(path):
                     shutil.rmtree(path)
                 t.update(1)
+
+    def _check_binary(self, path, layer, directory, tar):
+        with open(path, "rb") as binary_file:
+            if binary_file.read(4) != b"\x7fELF":
+                return
+
+        with open(path, "rb") as binary_file:
+            elf = ELFFile(binary_file)
+            for section in elf.iter_sections():
+                if isinstance(section, DynamicSection):
+                    for tag in section.iter_tags():
+                        if hasattr(tag, "needed"):
+                            (
+                                resolved_layer,
+                                resolved_name,
+                                resolved_library,
+                            ) = self._find_library(directory, tag.needed)
+                            if (
+                                resolved_layer != layer
+                                and resolved_name not in tar.getnames()
+                            ):
+                                tar.add(resolved_library, arcname=resolved_name)
 
     def _materialize_last_layer(self, directory):
         layer = self.layers[-1]
@@ -89,6 +126,13 @@ class DockerFileSystem(object):
                 desc="Verifying image...",
             ) as t:
                 for root, dirs, files in os.walk(layer_directory):
+                    for _dir in dirs:
+                        tar_dir = tarfile.TarInfo(
+                            os.path.relpath(os.path.join(root, _dir), layer_directory)
+                        )
+                        tar_dir.type = tarfile.DIRTYPE
+                        tar_dir.mode = 0o777
+                        tar.addfile(tar_dir)
                     for file in [
                         os.path.join(root, file) for file in files if ".wh." not in file
                     ]:
@@ -120,7 +164,9 @@ class DockerFileSystem(object):
                                         layer_directory,
                                     )
 
-                            (resolved_layer, resolved) = self._find_file(directory, missing)
+                            (resolved_layer, resolved) = self._find_file(
+                                directory, missing
+                            )
 
                             if not resolved:
                                 logger.warn(
@@ -140,6 +186,11 @@ class DockerFileSystem(object):
                         if name not in tar.getnames():
                             tar.add(file, arcname=name)
                         t.update(1)
+
+            for binary in os.listdir(os.path.join(layer_directory, "usr", "bin")):
+                path = os.path.join(layer_directory, "usr", "bin", binary)
+                if os.path.isfile(path):
+                    self._check_binary(path, layer, directory, tar)
 
         self.client.api.import_image(
             os.path.join("./", "image.tar"), repository=self.image
