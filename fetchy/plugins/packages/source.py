@@ -116,7 +116,7 @@ class PersonalPackageArchiveSource(DebianBasedSource):
 class DefaultDebianSource(DebianBasedSource):
     def __init__(self, codename, architecture):
         super(DefaultDebianSource, self).__init__(
-            DebianMirror(), codename, architecture, ["main"], ["updates", "security"]
+            DebianMirror(), codename, architecture, ["main"], ["updates"]
         )
 
 

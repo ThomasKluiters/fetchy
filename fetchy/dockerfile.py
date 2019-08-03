@@ -7,6 +7,24 @@ class Step(object):
         raise NotImplementedError()
 
 
+class RunStep(object):
+    def __init__(self, script):
+        self.script = script
+
+    def __str__(self):
+        script = ",".join(map(lambda x: f'"{x}"', self.script))
+        return f"RUN [{script}]"
+
+
+class CmdStep(object):
+    def __init__(self, script):
+        self.script = script
+
+    def __str__(self):
+        script = ",".join(self.script)
+        return f"CMD [{script}]"
+
+
 class FromStep(object):
     def __init__(self, image):
         self.image = image
@@ -41,6 +59,7 @@ class DockerFile(object):
         self.steps = []
 
         self.from_image(base)
+        self.client = docker.DockerClient()
 
     def step(self, step):
         self.steps.append(step)
@@ -59,8 +78,14 @@ class DockerFile(object):
         with open(os.path.join(self.path, "Dockerfile"), "w", encoding="utf-8") as file:
             file.write("\n".join(map(str, self.steps)))
 
+    def cmd(self, script):
+        return self.step(CmdStep(script))
+
+    def run(self, script):
+        return self.step(RunStep(script))
+
     def build(self):
         self.create()
 
-        client = docker.DockerClient()
-        client.images.build(path=self.path, tag=self.tag)
+        (img, _) = self.client.images.build(path=self.path)
+        return img.short_id

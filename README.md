@@ -77,6 +77,32 @@ system (debian stretch in this example), this is also possible:
 fetchy dockerize --distribution debian --version stretch openssl
 ```
 
+### Blueprints
+
+You can also use blueprints to build images:
+
+```yaml
+architecture: amd64
+base: scratch
+codename: bionic
+distribution: ubuntu
+packages:
+  exclude:
+  - debconf
+  fetch:
+  - python
+paths:
+  discover:
+  - packages
+tag: builder
+```
+
+Call fetchy with:
+
+```bash
+fetchy blueprint blueprint.yml
+```
+
 ### Advanced features
 
 #### Excluding dependencies
