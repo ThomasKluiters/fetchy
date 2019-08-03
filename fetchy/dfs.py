@@ -42,7 +42,9 @@ class DockerFileSystem(object):
 
     def _find_file(self, directory, path, image_tar):
         for layer in reversed(self.layers):
-            with tarfile.open(os.path.join(directory, layer, "layer.tar")) as other_layer:
+            with tarfile.open(
+                os.path.join(directory, layer, "layer.tar")
+            ) as other_layer:
                 if path in other_layer.getnames():
                     member = other_layer.getmember(path)
                     image_tar.addfile(member, other_layer.extractfile(member))
@@ -50,8 +52,14 @@ class DockerFileSystem(object):
 
     def _find_library(self, directory, library, image_tar):
         for layer in reversed(self.layers):
-            with tarfile.open(os.path.join(directory, layer, "layer.tar")) as other_layer:
-                for file in [file for file in other_layer.getnames() if Path(file).name == library]:
+            with tarfile.open(
+                os.path.join(directory, layer, "layer.tar")
+            ) as other_layer:
+                for file in [
+                    file
+                    for file in other_layer.getnames()
+                    if Path(file).name == library
+                ]:
                     member = other_layer.getmember(file)
                     if member.isfile():
                         image_tar.addfile(member, other_layer.extractfile(member))
@@ -89,39 +97,55 @@ class DockerFileSystem(object):
 
         fileobj.seek(0)
         elf = ELFFile(fileobj)
-        for section in [section for section in elf.iter_sections() if isinstance(section, DynamicSection)]:
-            for library in [tag.needed for tag in section.iter_tags() if hasattr(tag, "needed")]:
-                if not [file for file in (layer_tar.getnames() + image_tar.getnames()) if Path(file).name == library]:
+        for section in [
+            section
+            for section in elf.iter_sections()
+            if isinstance(section, DynamicSection)
+        ]:
+            for library in [
+                tag.needed for tag in section.iter_tags() if hasattr(tag, "needed")
+            ]:
+                if not [
+                    file
+                    for file in (layer_tar.getnames() + image_tar.getnames())
+                    if Path(file).name == library
+                ]:
                     self._find_library(directory, library, image_tar)
                     print(f"Adding library: {found_member.name}")
         fileobj.seek(0)
-    
+
     def _is_doc(self, path):
-        for document_path in [
-            "usr/share/doc",
-            "usr/share/man",
-            "usr/share/locale"
-        ]:
+        for document_path in ["usr/share/doc", "usr/share/man", "usr/share/locale"]:
             if path.startswith(document_path):
                 return True
         return False
 
     def _filter_members(self, image_tar, layer_tar):
-        return [member for member in layer_tar if not self._is_doc(member.name) and not member.name in image_tar.getnames()]
+        return [
+            member
+            for member in layer_tar
+            if not self._is_doc(member.name) and not member.name in image_tar.getnames()
+        ]
 
     def _materialize_layers(self, directory, idx):
         with tarfile.open(os.path.join(directory, "image.tar"), "w:gz") as image_tar:
             for layer in reversed(self.layers[-idx:]):
-                with tarfile.open(os.path.join(directory, layer, "layer.tar")) as layer_tar:
+                with tarfile.open(
+                    os.path.join(directory, layer, "layer.tar")
+                ) as layer_tar:
                     for member in self._filter_members(image_tar, layer_tar):
                         print(member)
                         if member.islnk() or member.issym():
-                            if member.linkname.startswith("usr") or member.linkname.startswith("bin"):
+                            if member.linkname.startswith(
+                                "usr"
+                            ) or member.linkname.startswith("bin"):
                                 name = member.linkname
                             else:
                                 name = Path(Path(member.name).parent, member.linkname)
                             target = os.path.normpath(name).lstrip("/")
-                            if target not in (layer_tar.getnames() + image_tar.getnames()) :
+                            if target not in (
+                                layer_tar.getnames() + image_tar.getnames()
+                            ):
                                 self._find_file(directory, target, image_tar)
                             image_tar.addfile(member)
                         elif member.isfile():
@@ -139,4 +163,4 @@ class DockerFileSystem(object):
         with TemporaryDirectory() as tmp:
             self._extract_image_in(tmp)
             self._extract_layers(tmp)
-            self._materialize_layers(tmp, 3)
+            self._materialize_layers(tmp, 1)

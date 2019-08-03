@@ -1,5 +1,9 @@
 import os
+import json
 import docker
+import tarfile
+
+from pathlib import Path
 
 
 class Step(object):
@@ -58,7 +62,6 @@ class DockerFile(object):
         self.tag = tag
         self.steps = []
 
-        self.from_image(base)
         self.client = docker.DockerClient()
 
     def step(self, step):
@@ -74,7 +77,8 @@ class DockerFile(object):
     def env(self, name, value):
         return self.step(EnvStep(name, value))
 
-    def create(self):
+    def create(self, builder_hash):
+        self.steps.insert(0, FromStep(builder_hash))
         with open(os.path.join(self.path, "Dockerfile"), "w", encoding="utf-8") as file:
             file.write("\n".join(map(str, self.steps)))
 
@@ -84,8 +88,16 @@ class DockerFile(object):
     def run(self, script):
         return self.step(RunStep(script))
 
-    def build(self):
-        self.create()
+    def build_builder_image(self):
+        result = self.client.api.import_image_from_data(
+            open(Path(self.path, "image.tar"), "rb")
+        )
+        return json.loads(result)["status"]
 
-        (img, _) = self.client.images.build(path=self.path)
-        return img.short_id
+    def build(self):
+        builder_image_id = self.build_builder_image()
+
+        self.create(builder_image_id)
+
+        (install_image_id, _) = self.client.images.build(path=self.path)
+        return (install_image_id.short_id, builder_image_id)
