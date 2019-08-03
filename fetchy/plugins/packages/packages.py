@@ -110,6 +110,8 @@ class PackagesPlugin(BasePlugin):
         context.dockerfile.copy(Path(self._dir_name(), "deb").as_posix(), "/deb")
         context.dockerfile.run(["dpkg", "--configure", "-a"])
         context.dockerfile.run(["dpkg", "-i", "--force-depends", "-R", "/deb"])
+        context.dockerfile.run(["mkdir", "-p","/var/run/mysqld"])
+        context.dockerfile.run(["chown", "-R", "mysql:mysql", "/var/lib/mysql", "/var/run/mysqld"])
 
     def build(self, context):
         self._download_and_extract(context)
