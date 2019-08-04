@@ -129,7 +129,7 @@ class DockerFileSystem(object):
             self._load_layer(directory, layer)
 
         count = sum([len(layer.getnames()) for layer in self.loaded_layers.values()])
-        print(count)
+        
         with tqdm(total=count, desc="Slimming down image") as t:
             with tarfile.open(
                 os.path.join(directory, "image.tar"), "w:gz"
