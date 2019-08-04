@@ -45,7 +45,6 @@ class DpkgInstaller(object):
         return sha.hexdigest()[:32]
 
     def _builder_cache_file(self):
-        print(get_cache_dir())
         builder_path = Path(get_cache_dir(), "builder")
         if not builder_path.exists():
             builder_path.mkdir()
