@@ -4,6 +4,8 @@ import gzip
 import shutil
 import hashlib
 
+from fetchy.utils import get_cache_dir
+
 from .mirror import PersonalPackageArchiveMirror, UbuntuMirror, DebianMirror
 from pathlib import Path
 from tqdm import tqdm
@@ -40,9 +42,7 @@ class Source(object):
                         t.update(1)
 
     def _get_sources_dir(self):
-        if "XDG_CACHE_HOME" in os.environ:
-            return os.path.join(os.environ["XDG_CACHE_HOME"], "fetchy")
-        return os.path.join(str(Path.home()), ".cache", "fetchy")
+        return get_cache_dir()
 
     def _create_hash(self):
         """
