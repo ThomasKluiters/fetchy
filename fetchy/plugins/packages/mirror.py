@@ -147,7 +147,7 @@ class PersonalPackageArchiveMirror(Mirror):
                 return self.url_or_name + "/"
             return self.url_or_name
 
-        return f"http://ppa.launchpad.net/{self.url_or_name}/ppa/ubuntu/"
+        return f"http://ppa.launchpad.net/{self.url_or_name}/ubuntu/"
 
     def url_with_locale(self):
         return None

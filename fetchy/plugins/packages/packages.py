@@ -104,7 +104,7 @@ class PackagesPlugin(BasePlugin):
 
         Downloader(
             repository, os.path.join(self._dir_in_context(context), "deb")
-        ).download_packages(self.fetch)
+        ).download_packages(self.fetch, self._gather_exclusions())
 
         context.dockerfile.env(
             "PATH", ":".join(["/usr/bin/", "/bin/", "/sbin/", "/usr/sbin/"])
