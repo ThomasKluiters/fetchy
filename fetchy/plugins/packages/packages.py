@@ -98,10 +98,9 @@ class PackagesPlugin(BasePlugin):
 
         tar_file_path = Path(context.directory, "image.tar")
         with TemporaryDirectory() as temp_dir:
-            with tarfile.open(tar_file_path, "w:gz") as image_tar:
-                DpkgInstaller(Downloader(repository, temp_dir)).create_image_tar(
-                    image_tar
-                )
+            DpkgInstaller(Downloader(repository, temp_dir)).create_image_tar(
+                tar_file_path
+            )
 
         Downloader(
             repository, os.path.join(self._dir_in_context(context), "deb")

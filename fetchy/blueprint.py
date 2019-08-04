@@ -44,6 +44,5 @@ class BluePrint(object):
 
             print("Cleaning up...")
             context.dockerfile.client.images.remove(id)
-            context.dockerfile.client.images.remove(build_id)
 
             return {"tag": self.tag}

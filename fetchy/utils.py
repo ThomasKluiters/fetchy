@@ -92,3 +92,9 @@ def get_architecture():
             f"{arch} is not recognized. Please specify the architecture you want to use (e.g. --architecture amd64)."
         )
     return mapping[arch]
+
+
+def get_cache_dir():
+    if "XDG_CACHE_HOME" in os.environ:
+        return os.path.join(os.environ["XDG_CACHE_HOME"], "fetchy")
+    return os.path.join(str(Path.home()), ".cache", "fetchy")

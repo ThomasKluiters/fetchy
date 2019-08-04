@@ -1,7 +1,10 @@
 import os
 import io
+import hashlib
 import tarfile
 import shutil
+
+from fetchy.utils import get_cache_dir
 from tarfile import TarInfo, TarFile
 import unix_ar as arfile
 
@@ -32,27 +35,67 @@ class DpkgInstaller(object):
             "gzip",
         ]
 
-    def create_image_tar(self, image_tar):
-        for directory in [["./", "var", "lib", "dpkg", "info"], ["./", "var", "log"]]:
-            info = TarInfo("./" + Path(*directory).as_posix())
-            info.type = tarfile.DIRTYPE
-            image_tar.addfile(info)
+    def _download_files(self):
+        self.files = self.downloader.download_packages(self.build_essential)
 
-        for file in [["var", "log", "dpkg.log"]]:
-            image_tar.addfile(TarInfo("./" + Path(*file).as_posix()))
+    def _create_builder_hash(self):
+        sha = hashlib.sha256()
+        for deb_file in self.files:
+            sha.update(deb_file.package.download_url().encode())
+        return sha.hexdigest()[:32]
 
-        status_file = io.BytesIO()
+    def _builder_cache_file(self):
+        print(get_cache_dir())
+        builder_path = Path(get_cache_dir(), "builder")
+        if not builder_path.exists():
+            builder_path.mkdir()
 
-        for deb_file in self.downloader.download_packages(self.build_essential):
-            deb_file.unpack_into_tar(image_tar, status_file)
+        return Path(builder_path, self._create_builder_hash())
 
-        status_info = TarInfo("./" + Path("var", "lib", "dpkg", "status").as_posix())
-        status_info.size = status_file.getbuffer().nbytes
-        status_file.seek(0)
+    def _is_cached(self):
+        return self._builder_cache_file().exists()
 
-        image_tar.addfile(status_info, status_file)
+    def _build_image_tar(self, target_path):
+        with tarfile.open(target_path, "w:gz") as image_tar:
+            for directory in [
+                ["./", "var", "lib", "dpkg", "info"],
+                ["./", "var", "log"],
+            ]:
+                info = TarInfo("./" + Path(*directory).as_posix())
+                info.type = tarfile.DIRTYPE
+                image_tar.addfile(info)
 
-        status_file.close()
+            for file in [["var", "log", "dpkg.log"]]:
+                image_tar.addfile(TarInfo("./" + Path(*file).as_posix()))
+
+            status_file = io.BytesIO()
+
+            for deb_file in self.files:
+                deb_file.unpack_into_tar(image_tar, status_file)
+
+            status_info = TarInfo(
+                "./" + Path("var", "lib", "dpkg", "status").as_posix()
+            )
+            status_info.size = status_file.getbuffer().nbytes
+            status_file.seek(0)
+
+            image_tar.addfile(status_info, status_file)
+
+            status_file.close()
+
+    def _cache_tar(self, target_path):
+        shutil.copyfile(target_path, self._builder_cache_file())
+
+    def create_image_tar(self, target_path):
+        self._download_files()
+        if self._is_cached():
+            shutil.copyfile(self._builder_cache_file(), target_path)
+        else:
+            print(
+                "This is the first time using this environment.. building builder image.."
+            )
+            self._build_image_tar(target_path)
+            self._cache_tar(target_path)
 
 
 class DebianFile(object):
