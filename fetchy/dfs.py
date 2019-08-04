@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 class DockerFileSystem(object):
     def __init__(self, from_image, image, client: docker.DockerClient):
         self.from_image = from_image
+        self.loaded_layers = {}
         self.image = image
         self.client = client
 
@@ -42,28 +43,22 @@ class DockerFileSystem(object):
 
     def _find_file(self, directory, path, image_tar):
         for layer in reversed(self.layers):
-            with tarfile.open(
-                os.path.join(directory, layer, "layer.tar")
-            ) as other_layer:
-                if path in other_layer.getnames():
-                    member = other_layer.getmember(path)
-                    image_tar.addfile(member, other_layer.extractfile(member))
-                    return
+            other_layer = self._get_layer(directory, layer)
+            if path in other_layer.getnames():
+                member = other_layer.getmember(path)
+                image_tar.addfile(member, other_layer.extractfile(member))
+                return
 
     def _find_library(self, directory, library, image_tar):
         for layer in reversed(self.layers):
-            with tarfile.open(
-                os.path.join(directory, layer, "layer.tar")
-            ) as other_layer:
-                for file in [
-                    file
-                    for file in other_layer.getnames()
-                    if Path(file).name == library
-                ]:
-                    member = other_layer.getmember(file)
-                    if member.isfile():
-                        image_tar.addfile(member, other_layer.extractfile(member))
-                        return
+            other_layer = self._get_layer(directory, layer)
+            for file in [
+                file for file in other_layer.getnames() if Path(file).name == library
+            ]:
+                member = other_layer.getmember(file)
+                if member.isfile():
+                    image_tar.addfile(member, other_layer.extractfile(member))
+                    return
 
     def _remove_docker_files(self, directory, layer):
         layer_directory = os.path.join(directory, layer)
@@ -120,44 +115,63 @@ class DockerFileSystem(object):
                 return True
         return False
 
-    def _filter_members(self, image_tar, layer_tar):
-        return [
-            member
-            for member in layer_tar
-            if not self._is_doc(member.name) and not member.name in image_tar.getnames()
-        ]
+    def _load_layer(self, directory, sha):
+        self.loaded_layers[sha] = tarfile.open(os.path.join(directory, sha, "layer.tar"))
+
+    def _get_layer(self, directory, sha):
+        if sha not in self.loaded_layers:
+            self._load_layer(directory, sha)
+
+        return self.loaded_layers[sha]
 
     def _materialize_layers(self, directory, idx):
-        with tarfile.open(os.path.join(directory, "image.tar"), "w:gz") as image_tar:
-            for layer in reversed(self.layers[-idx:]):
-                with tarfile.open(
-                    os.path.join(directory, layer, "layer.tar")
-                ) as layer_tar:
-                    for member in self._filter_members(image_tar, layer_tar):
-                        print(member)
-                        if member.islnk() or member.issym():
-                            if member.linkname.startswith(
-                                "usr"
-                            ) or member.linkname.startswith("bin"):
-                                name = member.linkname
+        for layer in reversed(self.layers[-idx:]):
+            self._load_layer(directory, layer)
+
+        count = sum([len(layer.getnames()) for layer in self.loaded_layers.values()])
+        print(count)
+        with tqdm(total=count, desc="Slimming down image") as t:
+            with tarfile.open(
+                os.path.join(directory, "image.tar"), "w:gz"
+            ) as image_tar:
+                for layer in reversed(self.layers[-idx:]):
+                    with tarfile.open(
+                        os.path.join(directory, layer, "layer.tar")
+                    ) as layer_tar:
+                        for member in layer_tar:
+                            t.update(1)
+                            if self._is_doc(member.name) or member.name in image_tar.getnames():
+                                continue
+                            if member.islnk() or member.issym():
+                                if member.linkname.startswith(
+                                    "usr"
+                                ) or member.linkname.startswith("bin"):
+                                    name = member.linkname
+                                else:
+                                    name = Path(
+                                        Path(member.name).parent, member.linkname
+                                    )
+                                target = os.path.normpath(name).lstrip("/")
+                                if target not in (
+                                    layer_tar.getnames() + image_tar.getnames()
+                                ):
+                                    self._find_file(directory, target, image_tar)
+                                image_tar.addfile(member)
+                            elif member.isfile():
+                                fileobj = layer_tar.extractfile(member)
+                                self._check_binary(
+                                    directory, layer_tar, image_tar, fileobj
+                                )
+                                image_tar.addfile(member, fileobj)
                             else:
-                                name = Path(Path(member.name).parent, member.linkname)
-                            target = os.path.normpath(name).lstrip("/")
-                            if target not in (
-                                layer_tar.getnames() + image_tar.getnames()
-                            ):
-                                self._find_file(directory, target, image_tar)
-                            image_tar.addfile(member)
-                        elif member.isfile():
-                            fileobj = layer_tar.extractfile(member)
-                            self._check_binary(directory, layer_tar, image_tar, fileobj)
-                            image_tar.addfile(member, fileobj)
-                        else:
-                            image_tar.addfile(member)
+                                image_tar.addfile(member)
 
         self.client.api.import_image(
             os.path.join(directory, "image.tar"), repository=self.image
         )
+
+        for layer in self.loaded_layers.values():
+            layer.close()
 
     def build_minimal_image(self):
         with TemporaryDirectory() as tmp:
