@@ -8,7 +8,7 @@ Fetchy can be used to build minimal docker images with the minimal set
 of dependencies required, significantly reducing the size of your Docker
 images.
 
-etchy will make it incredibly easy to build your docker
+Fetchy will make it incredibly easy to build your docker
 images. Simply using the CLI `fetchy dockerize <name>`. Try it!
 
 Furthermore, it is possible to customize the operating system,
