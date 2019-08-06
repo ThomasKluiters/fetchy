@@ -5,6 +5,7 @@ import docker
 import shutil
 import logging
 
+from tarfile import TarInfo
 from pathlib import Path
 from tqdm import tqdm
 from elftools.elf.elffile import ELFFile
@@ -106,7 +107,6 @@ class DockerFileSystem(object):
                     if Path(file).name == library
                 ]:
                     self._find_library(directory, library, image_tar)
-                    print(f"Adding library: {found_member.name}")
         fileobj.seek(0)
 
     def _is_doc(self, path):
@@ -139,7 +139,6 @@ class DockerFileSystem(object):
                         os.path.join(directory, layer, "layer.tar")
                     ) as layer_tar:
                         for member in layer_tar:
-                            t.update(1)
                             if self._is_doc(member.name) or member.name in image_tar.getnames():
                                 continue
                             if member.islnk() or member.issym():
@@ -165,6 +164,18 @@ class DockerFileSystem(object):
                                 image_tar.addfile(member, fileobj)
                             else:
                                 image_tar.addfile(member)
+                            t.update(1)
+                for base_dir in [
+                    "tmp",
+                    "var",
+                    "sys",
+                    "proc",
+                    "run"
+                ]:
+                    if base_dir not in image_tar.getnames():
+                        info = TarInfo(base_dir)
+                        info.type = tarfile.DIRTYPE
+                        image_tar.addfile(info)
 
         self.client.api.import_image(
             os.path.join(directory, "image.tar"), repository=self.image
