@@ -1,6 +1,8 @@
+import io
 import os
 import sys
 import tempfile
+import tarfile
 
 from fetchy.plugins import BasePlugin
 
@@ -11,7 +13,7 @@ from .debian import DpkgInstaller
 from .parser import Parser
 
 from pathlib import Path
-
+from tempfile import TemporaryDirectory
 from logging import Logger
 
 logger = Logger(__name__)
@@ -85,6 +87,8 @@ class PackagesPlugin(BasePlugin):
         return dependencies_to_exclude
 
     def _download_and_extract(self, context):
+        os.mkdir(self._dir_in_context(context))
+
         repository = self._build_repository()
 
         for package in self.fetch:
@@ -92,21 +96,20 @@ class PackagesPlugin(BasePlugin):
                 logger.error(f"{package} not found in packages.")
                 sys.exit(1)
 
-        installer = DpkgInstaller(Downloader(repository, tempfile.mkdtemp()))
+        tar_file_path = Path(context.directory, "image.tar")
+        with TemporaryDirectory() as temp_dir:
+            DpkgInstaller(Downloader(repository, temp_dir)).create_image_tar(
+                tar_file_path
+            )
 
-        build_pkgs = installer.install(
-            os.path.join(self._dir_in_context(context), "build")
-        )
-
-        files = Downloader(
+        Downloader(
             repository, os.path.join(self._dir_in_context(context), "deb")
-        ).download_packages(self.fetch)
+        ).download_packages(self.fetch, self._gather_exclusions())
 
         context.dockerfile.env(
             "PATH", ":".join(["/usr/bin/", "/bin/", "/sbin/", "/usr/sbin/"])
         )
         context.dockerfile.env("DEBIAN_FRONTEND", "noninteractive")
-        context.dockerfile.copy(Path(self._dir_name(), "build").as_posix(), "/")
         context.dockerfile.copy(Path(self._dir_name(), "deb").as_posix(), "/deb")
         context.dockerfile.run(["dpkg", "--configure", "-a"])
         context.dockerfile.run(["dpkg", "-i", "--force-depends", "-R", "/deb"])

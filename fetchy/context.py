@@ -10,5 +10,5 @@ class Context(object):
         return self
 
     def __exit__(self, type, value, traceback):
-        # shutil.rmtree(self.directory)
+        shutil.rmtree(self.directory)
         return

@@ -1,10 +1,14 @@
 import os
+import shutil
 import logging
 import urllib.request
+import hashlib
 
+from pathlib import Path
 from collections import OrderedDict
 from tqdm import tqdm
 from .debian import DebianFile
+from fetchy.utils import get_cache_dir
 
 logger = logging.getLogger(__name__)
 
@@ -81,11 +85,36 @@ class Downloader(object):
                         t.total = tsize
                     t.update(b * bsize - t.n)
 
-                urllib.request.urlretrieve(package_url, package_file, hook)
+                if self._has_cache_entry(package_url):
+                    with self._retreive_from_cache(package_url) as pkg_file:
+                        with open(package_file, "wb") as dst_file:
+                            shutil.copyfileobj(pkg_file, dst_file)
+                else:
+                    urllib.request.urlretrieve(package_url, package_file, hook)
+                    self._store_in_cache(package_url, package_file)
 
                 downloaded_packages.append(DebianFile(package, package_file))
 
         return downloaded_packages
+
+    def _get_cache_path(self, package_url):
+        package_cache_dir = Path(get_cache_dir(), "packages")
+        if not package_cache_dir.exists():
+            package_cache_dir.mkdir()
+
+        sha = hashlib.sha256()
+        sha.update(package_url.encode())
+        return Path(get_cache_dir(), "packages", f"{sha.hexdigest()[:32]}.deb")
+
+    def _store_in_cache(self, package_url, source):
+        shutil.copyfile(source, self._get_cache_path(package_url))
+
+    def _retreive_from_cache(self, package_url):
+        if self._has_cache_entry(package_url):
+            return open(self._get_cache_path(package_url), "rb")
+
+    def _has_cache_entry(self, package_url):
+        return self._get_cache_path(package_url).exists()
 
     def gather_dependencies(self, names, excludes):
         visited = []

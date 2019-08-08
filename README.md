@@ -8,6 +8,9 @@ Fetchy can be used to build minimal docker images with the minimal set
 of dependencies required, significantly reducing the size of your Docker
 images.
 
+Fetchy will make it incredibly easy to build your docker
+images. Simply using the CLI `fetchy dockerize <name>`. Try it!
+
 Furthermore, it is possible to customize the operating system,
 architecture and operating system version to fetch the latest (secure)
 packages from a package mirror.
@@ -21,11 +24,12 @@ Fetchy will look for available packages under `python` and download the
 packages required to run `python`. Then, if tasked to do so, Fetchy will
 extract the files of all the packages and wrap them in a Docker image.
 
+Fetchy will try to slim down the image by inspecting dependencies and remove
+/include packages as it sees fit.
+
 ## Does Fetchy have any effect on my system?
 
-No, files will only be downloaded temporarily.
-
-Furthermore, a folder will be created under ~/.cache for caching.
+A folder will be created under ~/.cache for caching.
 Or, if specified under `$XDG_CACHE_HOME`.
 
 ## Installing
@@ -64,12 +68,6 @@ You can specify multiple packages:
 fetchy dockerize python3.6 postgresql
 ```
 
-Download required packages for libc6 into a specific directory
-
-```bash
-fetchy download --out libc-packages libc6
-```
-
 If you want to build a docker image based on another operating
 system (debian stretch in this example), this is also possible:
 
@@ -91,9 +89,6 @@ packages:
   - debconf
   fetch:
   - python
-paths:
-  discover:
-  - packages
 tag: builder
 ```
 
@@ -137,7 +132,7 @@ If some packages are not available for your main mirror, try using a ppa:
 
 Using a name:
 ```bash
-fetchy dockerize --ppa deadsnakes python3.8
+fetchy dockerize --ppa deadsnakes/ppa python3.8
 ```
 
 Using a URL:
@@ -147,7 +142,7 @@ fetchy dockerize --ppa https://deb.nodesource.com/node_10.x nodejs
 
 Or both!
 ```bash
-fetchy dockerize --ppa https://deb.nodesource.com/node_10.x --ppa deadsnakes python3.8 nodejs
+fetchy dockerize --ppa https://deb.nodesource.com/node_10.x --ppa deadsnakes/ppa python3.8 nodejs
 ```
 
 ## Developing
@@ -162,7 +157,3 @@ cd fetchy
 poetry install
 poetry shell
 ```
-
-### Backlog
-
-- Docker integration [x]

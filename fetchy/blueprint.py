@@ -36,7 +36,7 @@ class BluePrint(object):
                 plugin.build(context)
 
             print("Installing dependencies, this might take a while...")
-            id = context.dockerfile.build()
+            (id, build_id) = context.dockerfile.build()
 
             print("Done! Slimming down image...")
             dfs = DockerFileSystem(id, self.tag, context.dockerfile.client)

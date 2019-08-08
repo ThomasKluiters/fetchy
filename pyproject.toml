@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "fetchy"
-version = "0.1.6"
+version = "0.1.7"
 description = "Minuscule docker images made trivial!"
 authors = ["thomas <thomas.kluiters@gmail.com>"]
 homepage = "https://github.com/ThomasKluiters/fetchy"
@@ -16,6 +16,7 @@ unix_ar = "^0.2.1"
 docker = "^4.0"
 cleo = "^0.7.5"
 pyyaml = "^5.1"
+pyelftools = "^0.25.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^3.0"
