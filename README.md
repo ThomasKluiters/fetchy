@@ -27,6 +27,15 @@ extract the files of all the packages and wrap them in a Docker image.
 Fetchy will try to slim down the image by inspecting dependencies and remove
 /include packages as it sees fit.
 
+## Backlog
+
+Currently the following features are being worked on:
+
+- Direct installation of package through url
+- Support redhat's archive
+- Easy exclusions and inclusions of files
+- Interactive management of packages
+
 ## Does Fetchy have any effect on my system?
 
 A folder will be created under ~/.cache for caching.
