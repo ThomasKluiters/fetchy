@@ -35,6 +35,7 @@ Currently the following features are being worked on:
 - Support redhat's archive
 - Easy exclusions and inclusions of files
 - Interactive management of packages
+- Stability fixes
 
 ## Does Fetchy have any effect on my system?
 
